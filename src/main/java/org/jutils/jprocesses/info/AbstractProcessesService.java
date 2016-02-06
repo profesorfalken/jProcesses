@@ -16,7 +16,6 @@ package org.jutils.jprocesses.info;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.jutils.jprocesses.jni.ProcessesDataCollector;
 import org.jutils.jprocesses.model.ProcessesInfo;
 
 /**
@@ -27,7 +26,7 @@ import org.jutils.jprocesses.model.ProcessesInfo;
 public abstract class AbstractProcessesService implements ProcessesService{
 
     public List<ProcessesInfo> getList() {
-        String rawData = ProcessesDataCollector.INSTANCE.getProcessesData();
+        String rawData = getProcessesData();
         
         List<Map<String, String>> mapList =  parseList(rawData);
         
@@ -35,10 +34,14 @@ public abstract class AbstractProcessesService implements ProcessesService{
     }
     
     public int killProcess(int pid) {
-        return ProcessesDataCollector.INSTANCE.killProcess(pid);
+        return kill(pid);
     }
     
     protected abstract List<Map<String, String>> parseList(String rawData);
+    
+    protected abstract String getProcessesData();
+    
+    protected abstract int kill(int pid);
     
     private List<ProcessesInfo> buildInfoFromMap(List<Map<String, String>> mapList) {
         List<ProcessesInfo> infoList = new ArrayList<ProcessesInfo>();

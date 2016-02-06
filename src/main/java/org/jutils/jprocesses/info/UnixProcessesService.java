@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
  * Service implementation for Unix/Linux
@@ -44,5 +45,15 @@ public class UnixProcessesService extends AbstractProcessesService {
         }
 
         return processesDataList;
+    }
+
+    @Override
+    protected String getProcessesData() {
+        return ProcessesUtils.executeCommand("ps", "-e");
+    }
+
+    @Override
+    protected int kill(int pid) {
+        return ProcessesUtils.executeCommandAndGetCode("kill", "-9", String.valueOf(pid));
     }
 }

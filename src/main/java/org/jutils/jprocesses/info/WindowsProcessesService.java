@@ -42,4 +42,14 @@ public class WindowsProcessesService extends AbstractProcessesService{
         
         return processesDataList;
     }
+
+    @Override
+    protected String getProcessesData() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected int kill(int pid) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
