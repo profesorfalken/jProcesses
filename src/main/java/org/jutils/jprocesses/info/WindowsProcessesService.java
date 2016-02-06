@@ -13,6 +13,8 @@
  */
 package org.jutils.jprocesses.info;
 
+import com.profesorfalken.wmi4java.WMI4Java;
+import com.profesorfalken.wmi4java.WMIClass;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,15 +31,26 @@ public class WindowsProcessesService extends AbstractProcessesService{
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
         String[] dataStringLines = rawData.split("\\r?\\n");
         
-        for (final String dataLine : dataStringLines) {
-            if (!(dataLine.trim().startsWith("PID"))) {
-                 Map<String, String> element = new HashMap<String, String>();
-                 String[] elements = dataLine.split("\\|\\|");
-                 element.put("pid", elements[0]);
-                 element.put("proc_name", elements[1]);
-                 element.put("proc_time", elements[2]);                 
-                 processesDataList.add(element);
-            }            
+        boolean newProcess = true;
+        for (final String dataLine : dataStringLines) {            
+            Map<String, String> processMap = null;
+            if (dataLine.trim().length() > 0) {
+                if (newProcess == true) {
+                    processMap = new HashMap<String, String>();                   
+                    newProcess = false;
+                }
+                if (processMap != null) {
+                    String[] dataStringInfo = dataLine.split(":");
+                    if (dataStringInfo.length == 2) {
+                        processMap.put(dataStringInfo[0].trim(), dataStringInfo[1].trim());
+                    }                
+                }
+            } else {
+                if (newProcess == false) {
+                    processesDataList.add(processMap);
+                }
+                newProcess = true;
+            }                  
         }
         
         return processesDataList;
@@ -46,6 +59,7 @@ public class WindowsProcessesService extends AbstractProcessesService{
     @Override
     protected String getProcessesData() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //return WMI4Java.get().VBSEngine().getWMIObject(WMIClass.WIN32_PROCESS);
     }
 
     @Override

@@ -12,6 +12,11 @@
             <version>4.10</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.profesorfalken</groupId>
+            <artifactId>WMI4Java</artifactId>
+            <version>1.0.2</version>
+        </dependency>
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
