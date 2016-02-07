@@ -1,4 +1,6 @@
 /*
+ * Copyright 2016 Javier Garcia Alonso.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +19,7 @@ import org.jutils.jprocesses.util.OSDetector;
 
 /**
  * Factory class to get the right information for the OS
+ * 
  * @author Javier Garcia Alonso
  */
 public class ProcessesFactory {	
