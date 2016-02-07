@@ -15,7 +15,7 @@
         <dependency>
             <groupId>com.profesorfalken</groupId>
             <artifactId>WMI4Java</artifactId>
-            <version>1.0.2</version>
+            <version>1.1</version>
         </dependency>
     </dependencies>
     <properties>

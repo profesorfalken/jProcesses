@@ -25,45 +25,72 @@ import java.util.Map;
  *
  * @author Javier Garcia Alonso
  */
-public class WindowsProcessesService extends AbstractProcessesService{
+public class WindowsProcessesService extends AbstractProcessesService {
 
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
+
         String[] dataStringLines = rawData.split("\\r?\\n");
-        
-        boolean newProcess = true;
-        for (final String dataLine : dataStringLines) {            
-            Map<String, String> processMap = null;
+
+        Map<String, String> processMap = null;
+        for (final String dataLine : dataStringLines) {
             if (dataLine.trim().length() > 0) {
-                if (newProcess == true) {
-                    processMap = new HashMap<String, String>();                   
-                    newProcess = false;
+                if (dataLine.startsWith("Caption")) {
+                    if (processMap != null && processMap.size() > 0) {
+                        processesDataList.add(processMap);
+                    }
+                    processMap = new HashMap<String, String>();
                 }
+
                 if (processMap != null) {
                     String[] dataStringInfo = dataLine.split(":");
                     if (dataStringInfo.length == 2) {
-                        processMap.put(dataStringInfo[0].trim(), dataStringInfo[1].trim());
-                    }                
+                        processMap.put(normalizeKey(dataStringInfo[0].trim()), 
+                                normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
+                    }
                 }
-            } else {
-                if (newProcess == false) {
-                    processesDataList.add(processMap);
-                }
-                newProcess = true;
-            }                  
+            }
         }
-        
+
         return processesDataList;
     }
 
     @Override
     protected String getProcessesData() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        //return WMI4Java.get().VBSEngine().getWMIObject(WMIClass.WIN32_PROCESS);
+        return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
     }
 
     @Override
     protected int kill(int pid) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private String normalizeKey(String origKey) {
+        if ("Name".equals(origKey)) {
+            return "proc_name";
+        } else if ("ProcessId".equals(origKey)) {
+            return "pid";
+        } else if ("UserModeTime".equals(origKey)) {
+            return "proc_time";
+        }
+        return origKey;
+    }
+    
+    private String normalizeValue(String origKey, String origValue) {
+        if ("UserModeTime".equals(origKey)) {
+            long longOrigValue = Long.valueOf(origValue);
+            //100 nano to second - https://msdn.microsoft.com/en-us/library/windows/desktop/aa394372(v=vs.85).aspx
+            long seconds = longOrigValue * 100 / 1000000 / 1000;
+            return nomalizeTime(seconds);
+        } 
+        
+        return origValue;
+    }
+
+    private String nomalizeTime(long seconds) {
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;       
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 }
