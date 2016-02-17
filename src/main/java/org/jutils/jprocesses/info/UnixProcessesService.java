@@ -26,8 +26,11 @@ import org.jutils.jprocesses.util.ProcessesUtils;
  *
  * @author Javier Garcia Alonso
  */
-public class UnixProcessesService extends AbstractProcessesService {
+class UnixProcessesService extends AbstractProcessesService {
+    //ps -C apache2
+    private static final String PS_COLUMNS = "pid,ruser,vsize,rssize,%cpu,bsdstart,bsdtime,comm,cmd";
 
+    
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
         String[] dataStringLines = rawData.split("\\r?\\n");
@@ -36,10 +39,16 @@ public class UnixProcessesService extends AbstractProcessesService {
             if (!(dataLine.trim().startsWith("PID"))) {
                 Map<String, String> element = new HashMap<String, String>();
                 String[] elements = dataLine.split("\\s+");
-                if (elements.length > 4) {
+                if (elements.length > 9) {
                     element.put("pid", elements[1]);
-                    element.put("proc_time", elements[3]);
-                    element.put("proc_name", elements[4]);
+                    element.put("user", elements[2]);
+                    element.put("virtual_memory", elements[3]);
+                    element.put("physical_memory", elements[4]);
+                    element.put("cpu_usage", elements[5]);
+                    element.put("start_time", elements[6]);
+                    element.put("proc_time", elements[7]);
+                    element.put("proc_name", elements[8]);
+                    element.put("command", elements[9]);
 
                     processesDataList.add(element);
                 }
@@ -48,10 +57,15 @@ public class UnixProcessesService extends AbstractProcessesService {
 
         return processesDataList;
     }
-
+    
     @Override
-    protected String getProcessesData() {
-        return ProcessesUtils.executeCommand("ps", "-e");
+    protected String getProcessesData(String name) {
+        if (name != null) {
+            return ProcessesUtils.executeCommand("ps", 
+                    "o", PS_COLUMNS, "-C", name);
+        }
+        return ProcessesUtils.executeCommand("ps", 
+                "o", PS_COLUMNS, "-e");
     }
 
     @Override

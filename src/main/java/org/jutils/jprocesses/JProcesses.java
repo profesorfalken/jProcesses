@@ -41,4 +41,18 @@ public class JProcesses {
          
          return srv.killProcess(pid) == 0;
     }
+    
+    public static List<ProcessesInfo> getProcessList(String name) {                
+        ProcessesService srv = ProcessesFactory.getService();
+        
+        return srv.getList(name);
+    }
+    
+    public static boolean changePriority(int pid) {
+         return false;
+    }
+    
+    public static String getNameByPID(int pid) {                
+        return "";
+    }    
 }

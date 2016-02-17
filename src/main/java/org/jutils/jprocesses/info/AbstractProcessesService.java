@@ -25,10 +25,13 @@ import org.jutils.jprocesses.model.ProcessesInfo;
  * 
  * @author Javier Garcia Alonso
  */
-public abstract class AbstractProcessesService implements ProcessesService{
-
+abstract class AbstractProcessesService implements ProcessesService{
     public List<ProcessesInfo> getList() {
-        String rawData = getProcessesData();
+        return getList(null);
+    }
+    
+    public List<ProcessesInfo> getList(String name) {
+        String rawData = getProcessesData(name);
         
         List<Map<String, String>> mapList =  parseList(rawData);
         
@@ -40,8 +43,8 @@ public abstract class AbstractProcessesService implements ProcessesService{
     }
     
     protected abstract List<Map<String, String>> parseList(String rawData);
-    
-    protected abstract String getProcessesData();
+
+    protected abstract String getProcessesData(String name);
     
     protected abstract int kill(int pid);
     
@@ -53,6 +56,13 @@ public abstract class AbstractProcessesService implements ProcessesService{
             info.setPid(map.get("pid"));
             info.setName(map.get("proc_name"));
             info.setTime(map.get("proc_time"));
+            info.setCommand(map.get("command"));
+            info.setCpuUsage(map.get("cpu_usage"));
+            info.setPhysicalMemory(map.get("physical_memory"));
+            info.setStartTime(map.get("start_time"));
+            info.setUser(map.get("user"));
+            info.setVirtualMemory(map.get("virtual_memory"));
+            
             infoList.add(info);
         }
         

@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * @author Javier Garcia Alonso
  */
-public class WindowsProcessesService extends AbstractProcessesService {
+class WindowsProcessesService extends AbstractProcessesService {
 
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
@@ -58,7 +58,7 @@ public class WindowsProcessesService extends AbstractProcessesService {
     }
 
     @Override
-    protected String getProcessesData() {
+    protected String getProcessesData(String name) {
         return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
     }
 

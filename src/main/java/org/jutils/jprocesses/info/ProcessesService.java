@@ -25,6 +25,7 @@ import org.jutils.jprocesses.model.ProcessesInfo;
  */
 public interface ProcessesService {
     public List<ProcessesInfo> getList();
+    public List<ProcessesInfo> getList(String name);
     
     public int killProcess(int pid);
 }
