@@ -18,7 +18,7 @@ package org.jutils.jprocesses.info;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.jutils.jprocesses.model.ProcessesInfo;
+import org.jutils.jprocesses.model.ProcessInfo;
 
 /**
  * Info related with processes
@@ -26,11 +26,11 @@ import org.jutils.jprocesses.model.ProcessesInfo;
  * @author Javier Garcia Alonso
  */
 abstract class AbstractProcessesService implements ProcessesService{
-    public List<ProcessesInfo> getList() {
+    public List<ProcessInfo> getList() {
         return getList(null);
     }
     
-    public List<ProcessesInfo> getList(String name) {
+    public List<ProcessInfo> getList(String name) {
         String rawData = getProcessesData(name);
         
         List<Map<String, String>> mapList =  parseList(rawData);
@@ -46,13 +46,13 @@ abstract class AbstractProcessesService implements ProcessesService{
 
     protected abstract String getProcessesData(String name);
     
-    protected abstract int kill(int pid);
+    protected abstract int kill(int pid);        
     
-    private List<ProcessesInfo> buildInfoFromMap(List<Map<String, String>> mapList) {
-        List<ProcessesInfo> infoList = new ArrayList<ProcessesInfo>();
+    private List<ProcessInfo> buildInfoFromMap(List<Map<String, String>> mapList) {
+        List<ProcessInfo> infoList = new ArrayList<ProcessInfo>();
         
         for (final Map<String, String> map: mapList) {
-            ProcessesInfo info = new ProcessesInfo();
+            ProcessInfo info = new ProcessInfo();
             info.setPid(map.get("pid"));
             info.setName(map.get("proc_name"));
             info.setTime(map.get("proc_time"));
@@ -62,6 +62,7 @@ abstract class AbstractProcessesService implements ProcessesService{
             info.setStartTime(map.get("start_time"));
             info.setUser(map.get("user"));
             info.setVirtualMemory(map.get("virtual_memory"));
+            info.setPriority(map.get("priority"));
             
             infoList.add(info);
         }

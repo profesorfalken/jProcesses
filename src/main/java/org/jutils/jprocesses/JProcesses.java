@@ -18,7 +18,7 @@ package org.jutils.jprocesses;
 import java.util.List;
 import org.jutils.jprocesses.info.ProcessesFactory;
 import org.jutils.jprocesses.info.ProcessesService;
-import org.jutils.jprocesses.model.ProcessesInfo;
+import org.jutils.jprocesses.model.ProcessInfo;
 
 /**
  * Static class that gives access to Processes details.
@@ -30,7 +30,7 @@ public class JProcesses {
     private JProcesses() {
     }
     
-    public static List<ProcessesInfo> getProcessList() {                
+    public static List<ProcessInfo> getProcessList() {                
         ProcessesService srv = ProcessesFactory.getService();
         
         return srv.getList();
@@ -42,17 +42,21 @@ public class JProcesses {
          return srv.killProcess(pid) == 0;
     }
     
-    public static List<ProcessesInfo> getProcessList(String name) {                
+    public static List<ProcessInfo> getProcessList(String name) {                
         ProcessesService srv = ProcessesFactory.getService();
         
         return srv.getList(name);
     }
     
-    public static boolean changePriority(int pid) {
-         return false;
+    public static ProcessInfo getProcess(int pid) {                
+        ProcessesService srv = ProcessesFactory.getService();
+        
+        return srv.getProcess(pid);
     }
     
-    public static String getNameByPID(int pid) {                
-        return "";
-    }    
+    public static boolean changePriority(int pid, int newPriority) {
+         ProcessesService srv = ProcessesFactory.getService();
+        
+        return srv.changePriority(pid, newPriority);
+    }
 }

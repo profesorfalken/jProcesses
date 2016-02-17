@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
@@ -28,7 +29,7 @@ import org.jutils.jprocesses.util.ProcessesUtils;
  */
 class UnixProcessesService extends AbstractProcessesService {
     //ps -C apache2
-    private static final String PS_COLUMNS = "pid,ruser,vsize,rssize,%cpu,bsdstart,bsdtime,comm,cmd";
+    private static final String PS_COLUMNS = "pid,ruser,vsize,rssize,%cpu,bsdstart,bsdtime,nice,comm,cmd";
 
     
     protected List<Map<String, String>> parseList(String rawData) {
@@ -39,7 +40,7 @@ class UnixProcessesService extends AbstractProcessesService {
             if (!(dataLine.trim().startsWith("PID"))) {
                 Map<String, String> element = new HashMap<String, String>();
                 String[] elements = dataLine.split("\\s+");
-                if (elements.length > 9) {
+                if (elements.length > 10) {
                     element.put("pid", elements[1]);
                     element.put("user", elements[2]);
                     element.put("virtual_memory", elements[3]);
@@ -47,8 +48,9 @@ class UnixProcessesService extends AbstractProcessesService {
                     element.put("cpu_usage", elements[5]);
                     element.put("start_time", elements[6]);
                     element.put("proc_time", elements[7]);
-                    element.put("proc_name", elements[8]);
-                    element.put("command", elements[9]);
+                    element.put("priority", elements[8]);
+                    element.put("proc_name", elements[9]);
+                    element.put("command", elements[10]);
 
                     processesDataList.add(element);
                 }
@@ -71,5 +73,34 @@ class UnixProcessesService extends AbstractProcessesService {
     @Override
     protected int kill(int pid) {
         return ProcessesUtils.executeCommandAndGetCode("kill", "-9", String.valueOf(pid));
+    }
+
+    public boolean changePriority(int pid, int priority) {
+        return (ProcessesUtils.executeCommandAndGetCode("renice", String.valueOf(priority), 
+                "-p", String.valueOf(pid)) == 0);
+    }
+
+    public ProcessInfo getProcess(int pid) {
+        List<Map<String, String>> processList = 
+                parseList(ProcessesUtils.executeCommand("ps", 
+                "o", PS_COLUMNS, "-p", String.valueOf(pid)));
+        
+        if (processList != null && !processList.isEmpty()) {
+            Map<String, String> processData = processList.get(0);
+            ProcessInfo info = new ProcessInfo();
+            info.setPid(processData.get("pid"));
+            info.setName(processData.get("proc_name"));
+            info.setTime(processData.get("proc_time"));
+            info.setCommand(processData.get("command"));
+            info.setCpuUsage(processData.get("cpu_usage"));
+            info.setPhysicalMemory(processData.get("physical_memory"));
+            info.setStartTime(processData.get("start_time"));
+            info.setUser(processData.get("user"));
+            info.setVirtualMemory(processData.get("virtual_memory"));
+            info.setPriority(processData.get("priority"));
+            
+            return info;
+        }
+        return null;
     }
 }

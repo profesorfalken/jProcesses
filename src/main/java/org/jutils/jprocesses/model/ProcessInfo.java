@@ -20,7 +20,7 @@ package org.jutils.jprocesses.model;
  * 
  * @author Javier Garcia Alonso
  */
-public class ProcessesInfo {
+public class ProcessInfo {
     private String pid;
     private String time;
     private String name;
@@ -29,6 +29,7 @@ public class ProcessesInfo {
     private String physicalMemory;
     private String cpuUsage;
     private String startTime;
+    private String priority;
     private String command;
 
     public String getPid() {
@@ -102,6 +103,13 @@ public class ProcessesInfo {
     public void setCommand(String command) {
         this.command = command;
     }
-    
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
     
 }

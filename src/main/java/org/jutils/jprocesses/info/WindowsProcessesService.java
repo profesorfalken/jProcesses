@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jutils.jprocesses.model.ProcessInfo;
 
 /**
  * Service implementation for Windows
@@ -94,5 +95,13 @@ class WindowsProcessesService extends AbstractProcessesService {
         long minutes = (seconds % 3600) / 60;       
 
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    public boolean changePriority(int pid, int priority) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public ProcessInfo getProcess(int pid) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
