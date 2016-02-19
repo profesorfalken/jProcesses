@@ -8,6 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.jutils.jprocesses.model.ProcessInfo;
+import org.jutils.jprocesses.model.WindowsPriority;
 
 /**
  *
@@ -37,7 +38,7 @@ public class JProcessesTest {
     /**
      * Test of getProcessList method, of class JProcesses.
      */
-    @Test
+    //@Test
     public void testGetProcessList() {
         System.out.println("===============Testing getProcessList============");
         List<ProcessInfo> processesList = JProcesses.getProcessList();
@@ -63,7 +64,7 @@ public class JProcessesTest {
     /**
      * Test of getProcessList method by name, of class JProcesses.
      */
-    @Test
+    //@Test
     public void testGetProcessListByName() {
         System.out.println("===============Testing getProcessList by name============");
         List<ProcessInfo> processesList = JProcesses.getProcessList("java");
@@ -89,20 +90,31 @@ public class JProcessesTest {
     /**
      * Test of getProcessList method by name, of class JProcesses.
      */
+    //@Test
+    public void testKill() {
+        System.out.println("===============Testing killProcess============");
+        boolean success = JProcesses.killProcess(3844);
+
+        System.out.println("===============End test killProcess============");
+    }
+    
+    /**
+     * Test of getProcessList method by name, of class JProcesses.
+     */
     @Test
     public void testChangePriority() {
         System.out.println("===============Testing changePriority============");
-        boolean ok = JProcesses.changePriority(2689, 5);
+        boolean ok = JProcesses.changePriority(3260, WindowsPriority.HIGH);
         assertTrue(ok);
         
-        ProcessInfo process = JProcesses.getProcess(2689);
-        assertTrue("5".equals(process.getPriority()));
+        ProcessInfo process = JProcesses.getProcess(3260);
+        assertTrue(String.valueOf(13).equals(process.getPriority()));
 
-        ok = JProcesses.changePriority(2689, 7);
+        ok = JProcesses.changePriority(3260, WindowsPriority.NORMAL);
         assertTrue(ok);
         
-        process = JProcesses.getProcess(2689);
-        assertTrue("7".equals(process.getPriority()));
+        process = JProcesses.getProcess(3260);
+        assertTrue(String.valueOf(8).equals(process.getPriority()));
 
         System.out.println("===============End test changePriority============");
     }

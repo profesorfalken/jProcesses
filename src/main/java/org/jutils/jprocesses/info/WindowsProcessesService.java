@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.jutils.jprocesses.model.ProcessInfo;
+import org.jutils.jprocesses.util.ProcessesUtils;
+import org.jutils.jprocesses.util.VBScriptUtil;
 
 /**
  * Service implementation for Windows
@@ -29,6 +31,9 @@ import org.jutils.jprocesses.model.ProcessInfo;
  * @author Javier Garcia Alonso
  */
 class WindowsProcessesService extends AbstractProcessesService {
+
+    private final Map<String, String> userData = new HashMap<String, String>();
+    private final Map<String, String> cpuData = new HashMap<String, String>();
 
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
@@ -48,8 +53,13 @@ class WindowsProcessesService extends AbstractProcessesService {
                 if (processMap != null) {
                     String[] dataStringInfo = dataLine.split(":");
                     if (dataStringInfo.length == 2) {
-                        processMap.put(normalizeKey(dataStringInfo[0].trim()), 
+                        processMap.put(normalizeKey(dataStringInfo[0].trim()),
                                 normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
+
+                        if ("ProcessId".equals(dataStringInfo[0].trim())) {
+                            processMap.put("user", userData.get(dataStringInfo[1].trim()));
+                            processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
+                        }
                     }
                 }
             }
@@ -60,12 +70,57 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     @Override
     protected String getProcessesData(String name) {
+        //TODO: used to get CPU%
+        //String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);        
+        String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);
+
+        String[] dataStringLines = perfData.split("\\r?\\n");
+        String pid = null;
+        String cpuUsage = null;
+        for (final String dataLine : dataStringLines) {
+            if (dataLine.trim().length() > 0) {
+                if (dataLine.startsWith("Caption")) {
+                    if (pid != null && cpuUsage != null) {
+                        cpuData.put(pid, cpuUsage);
+                    }
+                    continue;
+                }
+
+                if (dataLine.startsWith("IDProcess")) {
+                    String[] dataStringInfo = dataLine.split(":");
+                    if (dataStringInfo.length == 2) {
+                        pid = dataStringInfo[1].trim();
+                    }
+                    continue;
+                }
+
+                if (dataLine.startsWith("PercentProcessorTime")) {
+                    String[] dataStringInfo = dataLine.split(":");
+                    if (dataStringInfo.length == 2) {
+                        cpuUsage = dataStringInfo[1].trim();
+                    }
+                }
+            }
+        }
+
+        String processesData = VBScriptUtil.getProcessesOwner();
+
+        if (processesData != null) {
+            dataStringLines = processesData.split("\\r?\\n");
+            for (final String dataLine : dataStringLines) {
+                String[] dataStringInfo = dataLine.split(":");
+                if (dataStringInfo.length == 2) {
+                    userData.put(dataStringInfo[0].trim(), dataStringInfo[1].trim());
+                }
+            }
+        }
+
         return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
     }
 
     @Override
     protected int kill(int pid) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return ProcessesUtils.executeCommandAndGetCode("taskkill", "/PID", String.valueOf(pid), "/F");
     }
 
     private String normalizeKey(String origKey) {
@@ -75,33 +130,69 @@ class WindowsProcessesService extends AbstractProcessesService {
             return "pid";
         } else if ("UserModeTime".equals(origKey)) {
             return "proc_time";
+        } else if ("Priority".equals(origKey)) {
+            return "priority";
+        } else if ("VirtualSize".equals(origKey)) {
+            return "virtual_memory";
+        } else if ("WorkingSetSize".equals(origKey)) {
+            return "physical_memory";
+        } else if ("CommandLine".equals(origKey)) {
+            return "command";
+        } else if ("CreationDate".equals(origKey)) {
+            return "start_time";
         }
+
         return origKey;
     }
-    
+
     private String normalizeValue(String origKey, String origValue) {
         if ("UserModeTime".equals(origKey)) {
             long longOrigValue = Long.valueOf(origValue);
             //100 nano to second - https://msdn.microsoft.com/en-us/library/windows/desktop/aa394372(v=vs.85).aspx
             long seconds = longOrigValue * 100 / 1000000 / 1000;
             return nomalizeTime(seconds);
-        } 
-        
+        }
+        if ("VirtualSize".equals(origKey) || "WorkingSetSize".equals(origKey)) {
+            if (!(origValue.isEmpty())) {
+                return (String.valueOf(Integer.valueOf(origValue) / 1024));
+            }
+        }
+
         return origValue;
     }
 
     private String nomalizeTime(long seconds) {
         long hours = seconds / 3600;
-        long minutes = (seconds % 3600) / 60;       
+        long minutes = (seconds % 3600) / 60;
 
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
     public boolean changePriority(int pid, int priority) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        VBScriptUtil.changePriority(pid, priority);
+        return true;
     }
 
     public ProcessInfo getProcess(int pid) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        List<Map<String, String>> allProcesses = parseList(getProcessesData(null));
+
+        for (final Map<String, String> process : allProcesses) {
+            if (String.valueOf(pid).equals(process.get("pid"))) {
+                ProcessInfo info = new ProcessInfo();
+                info.setPid(process.get("pid"));
+                info.setName(process.get("proc_name"));
+                info.setTime(process.get("proc_time"));
+                info.setCommand(process.get("command"));
+                info.setCpuUsage(process.get("cpu_usage"));
+                info.setPhysicalMemory(process.get("physical_memory"));
+                info.setStartTime(process.get("start_time"));
+                info.setUser(process.get("user"));
+                info.setVirtualMemory(process.get("virtual_memory"));
+                info.setPriority(process.get("priority"));
+
+                return info;
+            }
+        }
+        return null;
     }
 }
