@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
@@ -71,13 +72,21 @@ class UnixProcessesService extends AbstractProcessesService {
     }
 
     @Override
-    protected int kill(int pid) {
-        return ProcessesUtils.executeCommandAndGetCode("kill", "-9", String.valueOf(pid));
+    protected JProcessesResponse kill(int pid) {
+        JProcessesResponse response = new JProcessesResponse();
+        if (ProcessesUtils.executeCommandAndGetCode("kill", "-9", String.valueOf(pid)) == 0) {
+            response.setSuccess(true);
+        }
+        return response;
     }
 
-    public boolean changePriority(int pid, int priority) {
-        return (ProcessesUtils.executeCommandAndGetCode("renice", String.valueOf(priority), 
-                "-p", String.valueOf(pid)) == 0);
+    public JProcessesResponse changePriority(int pid, int priority) {
+        JProcessesResponse response = new JProcessesResponse();
+        if (ProcessesUtils.executeCommandAndGetCode("renice", String.valueOf(priority), 
+                "-p", String.valueOf(pid)) == 0) {
+            response.setSuccess(true);
+        }
+        return response;
     }
 
     public ProcessInfo getProcess(int pid) {

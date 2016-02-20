@@ -18,6 +18,7 @@ package org.jutils.jprocesses.info;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
 
 /**
@@ -38,7 +39,7 @@ abstract class AbstractProcessesService implements ProcessesService{
         return buildInfoFromMap(mapList);
     }
     
-    public int killProcess(int pid) {
+    public JProcessesResponse killProcess(int pid) {
         return kill(pid);
     }
     
@@ -46,7 +47,7 @@ abstract class AbstractProcessesService implements ProcessesService{
 
     protected abstract String getProcessesData(String name);
     
-    protected abstract int kill(int pid);        
+    protected abstract JProcessesResponse kill(int pid);        
     
     private List<ProcessInfo> buildInfoFromMap(List<Map<String, String>> mapList) {
         List<ProcessInfo> infoList = new ArrayList<ProcessInfo>();
@@ -56,7 +57,7 @@ abstract class AbstractProcessesService implements ProcessesService{
             info.setPid(map.get("pid"));
             info.setName(map.get("proc_name"));
             info.setTime(map.get("proc_time"));
-            info.setCommand(map.get("command"));
+            info.setCommand((map.get("command") != null) ? map.get("command") : "");
             info.setCpuUsage(map.get("cpu_usage"));
             info.setPhysicalMemory(map.get("physical_memory"));
             info.setStartTime(map.get("start_time"));

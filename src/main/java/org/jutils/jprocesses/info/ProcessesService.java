@@ -16,6 +16,7 @@
 package org.jutils.jprocesses.info;
 
 import java.util.List;
+import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
 
 /**
@@ -29,6 +30,6 @@ public interface ProcessesService {
     
     public ProcessInfo getProcess(int pid);
     
-    public int killProcess(int pid);
-    public boolean changePriority(int pid, int priority);
+    public JProcessesResponse killProcess(int pid);
+    public JProcessesResponse changePriority(int pid, int priority);
 }

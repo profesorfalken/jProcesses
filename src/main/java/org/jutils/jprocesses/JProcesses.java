@@ -18,6 +18,7 @@ package org.jutils.jprocesses;
 import java.util.List;
 import org.jutils.jprocesses.info.ProcessesFactory;
 import org.jutils.jprocesses.info.ProcessesService;
+import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
 
 /**
@@ -36,10 +37,10 @@ public class JProcesses {
         return srv.getList();
     }
     
-    public static boolean killProcess(int pid) {
+    public static JProcessesResponse killProcess(int pid) {
          ProcessesService srv = ProcessesFactory.getService();
          
-         return srv.killProcess(pid) == 0;
+         return srv.killProcess(pid);
     }
     
     public static List<ProcessInfo> getProcessList(String name) {                
@@ -54,7 +55,7 @@ public class JProcesses {
         return srv.getProcess(pid);
     }
     
-    public static boolean changePriority(int pid, int newPriority) {
+    public static JProcessesResponse changePriority(int pid, int newPriority) {
          ProcessesService srv = ProcessesFactory.getService();
         
         return srv.changePriority(pid, newPriority);

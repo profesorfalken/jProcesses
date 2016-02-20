@@ -9,6 +9,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.model.WindowsPriority;
+import org.jutils.jprocesses.util.OSDetector;
 
 /**
  *
@@ -67,7 +68,12 @@ public class JProcessesTest {
     //@Test
     public void testGetProcessListByName() {
         System.out.println("===============Testing getProcessList by name============");
-        List<ProcessInfo> processesList = JProcesses.getProcessList("java");
+        String processToSearch = "netbeans";
+        if (OSDetector.isWindows()) {
+            processToSearch += ".exe";
+        }
+        
+        List<ProcessInfo> processesList = JProcesses.getProcessList(processToSearch);
 
         assertTrue(processesList != null && processesList.size() > 0);
 
@@ -93,7 +99,7 @@ public class JProcessesTest {
     //@Test
     public void testKill() {
         System.out.println("===============Testing killProcess============");
-        boolean success = JProcesses.killProcess(3844);
+        boolean success = JProcesses.killProcess(3844).isSuccess();
 
         System.out.println("===============End test killProcess============");
     }
@@ -104,13 +110,13 @@ public class JProcessesTest {
     @Test
     public void testChangePriority() {
         System.out.println("===============Testing changePriority============");
-        boolean ok = JProcesses.changePriority(3260, WindowsPriority.HIGH);
+        boolean ok = JProcesses.changePriority(3260, WindowsPriority.HIGH).isSuccess();
         assertTrue(ok);
         
         ProcessInfo process = JProcesses.getProcess(3260);
         assertTrue(String.valueOf(13).equals(process.getPriority()));
 
-        ok = JProcesses.changePriority(3260, WindowsPriority.NORMAL);
+        ok = JProcesses.changePriority(3260, WindowsPriority.NORMAL).isSuccess();
         assertTrue(ok);
         
         process = JProcesses.getProcess(3260);

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 import org.jutils.jprocesses.util.VBScriptUtil;
@@ -34,6 +35,8 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     private final Map<String, String> userData = new HashMap<String, String>();
     private final Map<String, String> cpuData = new HashMap<String, String>();
+    
+    private String nameFilter = null;
 
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
@@ -64,14 +67,96 @@ class WindowsProcessesService extends AbstractProcessesService {
                 }
             }
         }
+        
+        if (nameFilter != null) {
+            List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
+            for (final Map<String, String> process : processesDataList) {
+                if (!nameFilter.equals(process.get("proc_name"))) {
+                    processesToRemove.add(process);
+                }
+            }
+            processesDataList.removeAll(processesToRemove);
+        }
 
         return processesDataList;
     }
 
     @Override
     protected String getProcessesData(String name) {
-        //TODO: used to get CPU%
-        //String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);        
+        fillExtraProcessData();
+        
+        if (name != null) {
+            this.nameFilter = name;
+        }
+
+        return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
+    }
+
+    @Override
+    protected JProcessesResponse kill(int pid) {
+        JProcessesResponse response = new JProcessesResponse();
+        if (ProcessesUtils.executeCommandAndGetCode("taskkill", "/PID", String.valueOf(pid), "/F") == 0) {
+            response.setSuccess(true);
+        }
+        
+        return response;
+    }
+
+    private String normalizeKey(String origKey) {
+        if ("Name".equals(origKey)) {
+            return "proc_name";
+        } else if ("ProcessId".equals(origKey)) {
+            return "pid";
+        } else if ("UserModeTime".equals(origKey)) {
+            return "proc_time";
+        } else if ("Priority".equals(origKey)) {
+            return "priority";
+        } else if ("VirtualSize".equals(origKey)) {
+            return "virtual_memory";
+        } else if ("WorkingSetSize".equals(origKey)) {
+            return "physical_memory";
+        } else if ("CommandLine".equals(origKey)) {
+            return "command";
+        } else if ("CreationDate".equals(origKey)) {
+            return "start_time";
+        }
+
+        return origKey;
+    }
+
+    private String normalizeValue(String origKey, String origValue) {
+        if ("UserModeTime".equals(origKey)) {
+            long longOrigValue = Long.valueOf(origValue);
+            //100 nano to second - https://msdn.microsoft.com/en-us/library/windows/desktop/aa394372(v=vs.85).aspx
+            long seconds = longOrigValue * 100 / 1000000 / 1000;
+            return nomalizeTime(seconds);
+        }
+        if ("VirtualSize".equals(origKey) || "WorkingSetSize".equals(origKey)) {
+            if (!(origValue.isEmpty())) {
+                return (String.valueOf(Integer.valueOf(origValue) / 1024));
+            }
+        }
+        if ("CreationDate".equals(origKey)) {
+            if (!origValue.isEmpty()) {
+                String hour = origValue.substring(8, 10);
+                String minutes = origValue.substring(10, 12);
+                String seconds = origValue.substring(12, 14);
+
+                return hour + ":" + minutes + ":" + seconds;
+            }
+        }
+
+        return origValue;
+    }
+
+    private String nomalizeTime(long seconds) {
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+    
+    private void fillExtraProcessData() {
         String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);
 
         String[] dataStringLines = perfData.split("\\r?\\n");
@@ -114,63 +199,17 @@ class WindowsProcessesService extends AbstractProcessesService {
                 }
             }
         }
-
-        return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
     }
 
-    @Override
-    protected int kill(int pid) {
-        return ProcessesUtils.executeCommandAndGetCode("taskkill", "/PID", String.valueOf(pid), "/F");
-    }
-
-    private String normalizeKey(String origKey) {
-        if ("Name".equals(origKey)) {
-            return "proc_name";
-        } else if ("ProcessId".equals(origKey)) {
-            return "pid";
-        } else if ("UserModeTime".equals(origKey)) {
-            return "proc_time";
-        } else if ("Priority".equals(origKey)) {
-            return "priority";
-        } else if ("VirtualSize".equals(origKey)) {
-            return "virtual_memory";
-        } else if ("WorkingSetSize".equals(origKey)) {
-            return "physical_memory";
-        } else if ("CommandLine".equals(origKey)) {
-            return "command";
-        } else if ("CreationDate".equals(origKey)) {
-            return "start_time";
+    public JProcessesResponse changePriority(int pid, int priority) {
+        JProcessesResponse response = new JProcessesResponse();
+        String message = VBScriptUtil.changePriority(pid, priority);
+        if (message.isEmpty()) {
+            response.setSuccess(true);
+        } else {
+            response.setMessage(message);
         }
-
-        return origKey;
-    }
-
-    private String normalizeValue(String origKey, String origValue) {
-        if ("UserModeTime".equals(origKey)) {
-            long longOrigValue = Long.valueOf(origValue);
-            //100 nano to second - https://msdn.microsoft.com/en-us/library/windows/desktop/aa394372(v=vs.85).aspx
-            long seconds = longOrigValue * 100 / 1000000 / 1000;
-            return nomalizeTime(seconds);
-        }
-        if ("VirtualSize".equals(origKey) || "WorkingSetSize".equals(origKey)) {
-            if (!(origValue.isEmpty())) {
-                return (String.valueOf(Integer.valueOf(origValue) / 1024));
-            }
-        }
-
-        return origValue;
-    }
-
-    private String nomalizeTime(long seconds) {
-        long hours = seconds / 3600;
-        long minutes = (seconds % 3600) / 60;
-
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-    }
-
-    public boolean changePriority(int pid, int priority) {
-        VBScriptUtil.changePriority(pid, priority);
-        return true;
+        return response;
     }
 
     public ProcessInfo getProcess(int pid) {
