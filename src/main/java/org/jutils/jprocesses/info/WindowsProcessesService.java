@@ -24,7 +24,6 @@ import java.util.Map;
 import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
-import org.jutils.jprocesses.util.VBScriptUtil;
 
 /**
  * Service implementation for Windows
@@ -32,7 +31,11 @@ import org.jutils.jprocesses.util.VBScriptUtil;
  * @author Javier Garcia Alonso
  */
 class WindowsProcessesService extends AbstractProcessesService {
-
+//TODO: This Windows implementation works but it is not optimized by lack of time.
+//For example, the filter by name or the search by pid is done retrieving 
+//all the processes searching in the returning list.
+//Moreover, the information is dispersed and I had to get it from different sources (WMI classes, VBS scripts...)
+    
     private final Map<String, String> userData = new HashMap<String, String>();
     private final Map<String, String> cpuData = new HashMap<String, String>();
     
@@ -188,7 +191,7 @@ class WindowsProcessesService extends AbstractProcessesService {
             }
         }
 
-        String processesData = VBScriptUtil.getProcessesOwner();
+        String processesData = VBScriptHelper.getProcessesOwner();
 
         if (processesData != null) {
             dataStringLines = processesData.split("\\r?\\n");
@@ -203,7 +206,7 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     public JProcessesResponse changePriority(int pid, int priority) {
         JProcessesResponse response = new JProcessesResponse();
-        String message = VBScriptUtil.changePriority(pid, priority);
+        String message = VBScriptHelper.changePriority(pid, priority);
         if (message.isEmpty()) {
             response.setSuccess(true);
         } else {

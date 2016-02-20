@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Javier.
+ * Copyright 2016 Javier Garcia Alonso
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 package org.jutils.jprocesses.model;
 
 /**
- *
- * @author Javier
+ * Encapsulates the response of a JProcesses operation
+ * 
+ * @author Javier Garcia Alonso
  */
 public class JProcessesResponse {
     private boolean success;

@@ -24,7 +24,7 @@ import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
- * Service implementation for Unix/Linux
+ * Service implementation for Unix/BSD systems
  *
  * @author Javier Garcia Alonso
  */

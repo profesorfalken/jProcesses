@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Javier.
+ * Copyright 2016 Javier Garcia Alonso.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 package org.jutils.jprocesses.model;
 
 /**
- *
- * @author Javier
+ * Helper constants class to set different priority levels in Windows
+ * 
+ * @author Javier Garcia Alonso
  */
 public class WindowsPriority {
     public static final int IDLE = 64;

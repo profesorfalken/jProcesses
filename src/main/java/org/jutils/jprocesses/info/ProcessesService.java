@@ -25,11 +25,9 @@ import org.jutils.jprocesses.model.ProcessInfo;
  * @author Javier Garcia Alonso
  */
 public interface ProcessesService {
-    public List<ProcessInfo> getList();
-    public List<ProcessInfo> getList(String name);
-    
-    public ProcessInfo getProcess(int pid);
-    
-    public JProcessesResponse killProcess(int pid);
-    public JProcessesResponse changePriority(int pid, int priority);
+    List<ProcessInfo> getList();
+    List<ProcessInfo> getList(String name);    
+    ProcessInfo getProcess(int pid);    
+    JProcessesResponse killProcess(int pid);
+    JProcessesResponse changePriority(int pid, int priority);
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 Javier Garcia Alonso.
+ * Copyright 2016 Javier.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jutils.jprocesses.util;
+package org.jutils.jprocesses.info;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,12 +25,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * VBS script to retrieve processes owner
+ * Helper class of windows implementation to create and execute VBS scripts
  *
  * @author Javier Garcia Alonso
  */
-public class VBScriptUtil {
-
+class VBScriptHelper {
     private static final String CRLF = "\r\n";
 
     private static String executeScript(String scriptCode) {
@@ -66,12 +65,12 @@ public class VBScriptUtil {
                     }
                 }
                 if (!errorResponse.isEmpty()) {
-                    Logger.getLogger(VBScriptUtil.class.getName()).log(Level.SEVERE, "WMI operation finished in error: ");
+                    Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, "WMI operation finished in error: ");
                 }
             }
 
         } catch (Exception ex) {
-            Logger.getLogger(VBScriptUtil.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
                 if (writer != null) {
@@ -81,12 +80,17 @@ public class VBScriptUtil {
                     tmpFile.delete();
                 }
             } catch (IOException ioe) {
-                Logger.getLogger(VBScriptUtil.class.getName()).log(Level.SEVERE, null, ioe);
+                Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ioe);
             }
         }
         return scriptResponse.trim();
     }
 
+    /**
+     * Retrieve the owner of the processes.
+     * 
+     * @return list of strings composed by PID and owner, separated by :
+     */
     public static String getProcessesOwner() {
 
         try {
@@ -104,12 +108,19 @@ public class VBScriptUtil {
 
             return executeScript(scriptCode.toString());
         } catch (Exception ex) {
-            Logger.getLogger(VBScriptUtil.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return null;
     }
 
+    /**
+     * Changes the priority of a process
+     * 
+     * @param pid the PID
+     * @param newPriority the priority to set @see Windo
+     * @return the output of the script
+     */
     public static String changePriority(int pid, int newPriority) {
 
         try {
@@ -127,7 +138,7 @@ public class VBScriptUtil {
 
             return executeScript(scriptCode.toString());
         } catch (Exception ex) {
-            Logger.getLogger(VBScriptUtil.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return null;
