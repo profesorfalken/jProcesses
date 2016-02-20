@@ -39,7 +39,7 @@ public class JProcessesTest {
     /**
      * Test of getProcessList method, of class JProcesses.
      */
-    //@Test
+    @Test
     public void testGetProcessList() {
         System.out.println("===============Testing getProcessList============");
         List<ProcessInfo> processesList = JProcesses.getProcessList();
@@ -65,10 +65,10 @@ public class JProcessesTest {
     /**
      * Test of getProcessList method by name, of class JProcesses.
      */
-    //@Test
+    @Test
     public void testGetProcessListByName() {
         System.out.println("===============Testing getProcessList by name============");
-        String processToSearch = "netbeans";
+        String processToSearch = "java";
         if (OSDetector.isWindows()) {
             processToSearch += ".exe";
         }
@@ -107,7 +107,7 @@ public class JProcessesTest {
     /**
      * Test of getProcessList method by name, of class JProcesses.
      */
-    @Test
+    //@Test
     public void testChangePriority() {
         System.out.println("===============Testing changePriority============");
         boolean ok = JProcesses.changePriority(3260, WindowsPriority.HIGH).isSuccess();
