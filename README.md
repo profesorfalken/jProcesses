@@ -56,7 +56,7 @@ Unix/Mac:
     boolean ok = JProcesses.changePriority(3844, 5).isSuccess();
 ```
 
-Linux:
+Windows:
 
 ```java
     boolean ok = JProcesses.changePriority(3844, WindowsPriority.HIGH).isSuccess();
