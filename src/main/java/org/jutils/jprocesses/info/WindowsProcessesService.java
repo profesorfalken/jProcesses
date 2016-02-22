@@ -106,6 +106,16 @@ class WindowsProcessesService extends AbstractProcessesService {
         return response;
     }
 
+    @Override
+    protected JProcessesResponse killGracefully(int pid) {
+        JProcessesResponse response = new JProcessesResponse();
+        if (ProcessesUtils.executeCommandAndGetCode("taskkill", "/PID", String.valueOf(pid)) == 0) {
+            response.setSuccess(true);
+        }
+
+        return response;
+    }
+
     private String normalizeKey(String origKey) {
         if ("Name".equals(origKey)) {
             return "proc_name";

@@ -15,11 +15,12 @@
  */
 package org.jutils.jprocesses;
 
-import java.util.List;
 import org.jutils.jprocesses.info.ProcessesFactory;
 import org.jutils.jprocesses.info.ProcessesService;
 import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
+
+import java.util.List;
 
 /**
  * Static class that gives access to Processes details.
@@ -41,6 +42,12 @@ public class JProcesses {
          ProcessesService srv = ProcessesFactory.getService();
          
          return srv.killProcess(pid);
+    }
+
+    public static JProcessesResponse killProcessGracefully (int pid) {
+        ProcessesService srv = ProcessesFactory.getService();
+
+        return srv.killProcessGracefully(pid);
     }
     
     public static List<ProcessInfo> getProcessList(String name) {                

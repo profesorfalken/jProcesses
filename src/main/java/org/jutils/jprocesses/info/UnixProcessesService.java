@@ -15,13 +15,14 @@
  */
 package org.jutils.jprocesses.info;
 
+import org.jutils.jprocesses.model.JProcessesResponse;
+import org.jutils.jprocesses.model.ProcessInfo;
+import org.jutils.jprocesses.util.ProcessesUtils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jutils.jprocesses.model.JProcessesResponse;
-import org.jutils.jprocesses.model.ProcessInfo;
-import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
  * Service implementation for Unix/BSD systems
@@ -75,6 +76,15 @@ class UnixProcessesService extends AbstractProcessesService {
     protected JProcessesResponse kill(int pid) {
         JProcessesResponse response = new JProcessesResponse();
         if (ProcessesUtils.executeCommandAndGetCode("kill", "-9", String.valueOf(pid)) == 0) {
+            response.setSuccess(true);
+        }
+        return response;
+    }
+
+    @Override
+    protected JProcessesResponse killGracefully(int pid) {
+        JProcessesResponse response = new JProcessesResponse();
+        if (ProcessesUtils.executeCommandAndGetCode("kill", "-15", String.valueOf(pid)) == 0) {
             response.setSuccess(true);
         }
         return response;
