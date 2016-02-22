@@ -17,13 +17,14 @@ package org.jutils.jprocesses.info;
 
 import com.profesorfalken.wmi4java.WMI4Java;
 import com.profesorfalken.wmi4java.WMIClass;
+import org.jutils.jprocesses.model.JProcessesResponse;
+import org.jutils.jprocesses.model.ProcessInfo;
+import org.jutils.jprocesses.util.ProcessesUtils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jutils.jprocesses.model.JProcessesResponse;
-import org.jutils.jprocesses.model.ProcessInfo;
-import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
  * Service implementation for Windows
@@ -57,7 +58,7 @@ class WindowsProcessesService extends AbstractProcessesService {
                 }
 
                 if (processMap != null) {
-                    String[] dataStringInfo = dataLine.split(":");
+                    String[] dataStringInfo = dataLine.split(":",2);
                     if (dataStringInfo.length == 2) {
                         processMap.put(normalizeKey(dataStringInfo[0].trim()),
                                 normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
@@ -136,7 +137,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
         if ("VirtualSize".equals(origKey) || "WorkingSetSize".equals(origKey)) {
             if (!(origValue.isEmpty())) {
-                return (String.valueOf(Integer.valueOf(origValue) / 1024));
+                return (String.valueOf(Long.valueOf(origValue) / 1024));
             }
         }
         if ("CreationDate".equals(origKey)) {
