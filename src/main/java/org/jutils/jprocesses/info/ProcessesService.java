@@ -15,9 +15,10 @@
  */
 package org.jutils.jprocesses.info;
 
-import java.util.List;
 import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
+
+import java.util.List;
 
 /**
  * Interface for service retrieving processes information
@@ -29,5 +30,6 @@ public interface ProcessesService {
     List<ProcessInfo> getList(String name);    
     ProcessInfo getProcess(int pid);    
     JProcessesResponse killProcess(int pid);
+    JProcessesResponse killProcessGracefully(int pid);
     JProcessesResponse changePriority(int pid, int priority);
 }

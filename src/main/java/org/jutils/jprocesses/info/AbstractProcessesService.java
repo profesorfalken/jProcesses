@@ -15,11 +15,12 @@
  */
 package org.jutils.jprocesses.info;
 
+import org.jutils.jprocesses.model.JProcessesResponse;
+import org.jutils.jprocesses.model.ProcessInfo;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.jutils.jprocesses.model.JProcessesResponse;
-import org.jutils.jprocesses.model.ProcessInfo;
 
 /**
  * Info related with processes
@@ -42,13 +43,19 @@ abstract class AbstractProcessesService implements ProcessesService{
     public JProcessesResponse killProcess(int pid) {
         return kill(pid);
     }
+
+    public JProcessesResponse killProcessGracefully(int pid) {
+        return killGracefully(pid);
+    }
     
     protected abstract List<Map<String, String>> parseList(String rawData);
 
     protected abstract String getProcessesData(String name);
     
-    protected abstract JProcessesResponse kill(int pid);        
-    
+    protected abstract JProcessesResponse kill(int pid);
+
+    protected abstract JProcessesResponse killGracefully(int pid);
+
     private List<ProcessInfo> buildInfoFromMap(List<Map<String, String>> mapList) {
         List<ProcessInfo> infoList = new ArrayList<ProcessInfo>();
         
