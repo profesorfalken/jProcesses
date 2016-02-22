@@ -36,10 +36,10 @@ class WindowsProcessesService extends AbstractProcessesService {
 //For example, the filter by name or the search by pid is done retrieving 
 //all the processes searching in the returning list.
 //Moreover, the information is dispersed and I had to get it from different sources (WMI classes, VBS scripts...)
-    
+
     private final Map<String, String> userData = new HashMap<String, String>();
     private final Map<String, String> cpuData = new HashMap<String, String>();
-    
+
     private String nameFilter = null;
 
     protected List<Map<String, String>> parseList(String rawData) {
@@ -58,7 +58,7 @@ class WindowsProcessesService extends AbstractProcessesService {
                 }
 
                 if (processMap != null) {
-                    String[] dataStringInfo = dataLine.split(":",2);
+                    String[] dataStringInfo = dataLine.split(":", 2);
                     if (dataStringInfo.length == 2) {
                         processMap.put(normalizeKey(dataStringInfo[0].trim()),
                                 normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
@@ -71,7 +71,7 @@ class WindowsProcessesService extends AbstractProcessesService {
                 }
             }
         }
-        
+
         if (nameFilter != null) {
             List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
             for (final Map<String, String> process : processesDataList) {
@@ -88,7 +88,7 @@ class WindowsProcessesService extends AbstractProcessesService {
     @Override
     protected String getProcessesData(String name) {
         fillExtraProcessData();
-        
+
         if (name != null) {
             this.nameFilter = name;
         }
@@ -102,7 +102,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         if (ProcessesUtils.executeCommandAndGetCode("taskkill", "/PID", String.valueOf(pid), "/F") == 0) {
             response.setSuccess(true);
         }
-        
+
         return response;
     }
 
@@ -169,7 +169,7 @@ class WindowsProcessesService extends AbstractProcessesService {
 
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
-    
+
     private void fillExtraProcessData() {
         String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);
 

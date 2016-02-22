@@ -30,28 +30,28 @@ import java.util.Map;
  * @author Javier Garcia Alonso
  */
 class UnixProcessesService extends AbstractProcessesService {
-    //ps -C apache2
-    private static final String PS_COLUMNS = "pid,ruser,vsize,rssize,%cpu,bsdstart,bsdtime,nice,comm,cmd";
 
-    
+    //Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
+    private static final String PS_COLUMNS = "comm,pid,ruser,vsize,rss,%cpu,start,cputime,nice,command";
+
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
         String[] dataStringLines = rawData.split("\\r?\\n");
 
         for (final String dataLine : dataStringLines) {
-            if (!(dataLine.trim().startsWith("PID"))) {
+            if (!(dataLine.trim().startsWith("COMMAND"))) {
                 Map<String, String> element = new HashMap<String, String>();
                 String[] elements = dataLine.split("\\s+");
                 if (elements.length > 10) {
-                    element.put("pid", elements[1]);
-                    element.put("user", elements[2]);
-                    element.put("virtual_memory", elements[3]);
-                    element.put("physical_memory", elements[4]);
-                    element.put("cpu_usage", elements[5]);
-                    element.put("start_time", elements[6]);
-                    element.put("proc_time", elements[7]);
-                    element.put("priority", elements[8]);
-                    element.put("proc_name", elements[9]);
+                    element.put("proc_name", elements[1]);
+                    element.put("pid", elements[2]);
+                    element.put("user", elements[3]);
+                    element.put("virtual_memory", elements[4]);
+                    element.put("physical_memory", elements[5]);
+                    element.put("cpu_usage", elements[6]);
+                    element.put("start_time", elements[7]);
+                    element.put("proc_time", elements[8]);
+                    element.put("priority", elements[9]);                    
                     element.put("command", elements[10]);
 
                     processesDataList.add(element);
@@ -61,14 +61,14 @@ class UnixProcessesService extends AbstractProcessesService {
 
         return processesDataList;
     }
-    
+
     @Override
     protected String getProcessesData(String name) {
         if (name != null) {
-            return ProcessesUtils.executeCommand("ps", 
-                    "o", PS_COLUMNS, "-C", name);
+            return ProcessesUtils.executeCommand("bash", "-c", 
+                    "ps o " + PS_COLUMNS + " -e | grep \"^" + name + "[[:blank:]]\"");
         }
-        return ProcessesUtils.executeCommand("ps", 
+        return ProcessesUtils.executeCommand("ps",
                 "o", PS_COLUMNS, "-e");
     }
 
@@ -92,7 +92,7 @@ class UnixProcessesService extends AbstractProcessesService {
 
     public JProcessesResponse changePriority(int pid, int priority) {
         JProcessesResponse response = new JProcessesResponse();
-        if (ProcessesUtils.executeCommandAndGetCode("renice", String.valueOf(priority), 
+        if (ProcessesUtils.executeCommandAndGetCode("renice", String.valueOf(priority),
                 "-p", String.valueOf(pid)) == 0) {
             response.setSuccess(true);
         }
@@ -100,10 +100,10 @@ class UnixProcessesService extends AbstractProcessesService {
     }
 
     public ProcessInfo getProcess(int pid) {
-        List<Map<String, String>> processList = 
-                parseList(ProcessesUtils.executeCommand("ps", 
-                "o", PS_COLUMNS, "-p", String.valueOf(pid)));
-        
+        List<Map<String, String>> processList
+                = parseList(ProcessesUtils.executeCommand("ps",
+                                "o", PS_COLUMNS, "-p", String.valueOf(pid)));
+
         if (processList != null && !processList.isEmpty()) {
             Map<String, String> processData = processList.get(0);
             ProcessInfo info = new ProcessInfo();
@@ -117,7 +117,7 @@ class UnixProcessesService extends AbstractProcessesService {
             info.setUser(processData.get("user"));
             info.setVirtualMemory(processData.get("virtual_memory"));
             info.setPriority(processData.get("priority"));
-            
+
             return info;
         }
         return null;
