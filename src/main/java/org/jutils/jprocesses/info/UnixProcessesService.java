@@ -33,10 +33,10 @@ class UnixProcessesService extends AbstractProcessesService {
 
     // Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
 	/* if using both comm and command the ps utility will truncate the first one of them.
-	the fully expanded text columns must be the last one in the list of options
-	there is a difference in displaying comm: 
-	    on Linux: comm means the base of the binary file, e.g. bash
-	    on UNIX: comm means the full binary path, e.g. /bin/bash
+	   the fully expanded text column must be the last one in the list of options
+	   there is a difference in displaying comm: 
+	   	on Linux: comm means the base of the binary file, e.g. bash
+	    	on UNIX: comm means the full binary path, e.g. /bin/bash
 	*/
 	private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,start,cputime,nice,comm";
 	private static final int PS_COLUMNS_COUNT = PS_COLUMNS.split( "," ).length;
