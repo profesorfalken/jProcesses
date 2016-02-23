@@ -43,16 +43,17 @@ class UnixProcessesService extends AbstractProcessesService {
                 Map<String, String> element = new HashMap<String, String>();
                 String[] elements = dataLine.split("\\s+");
                 if (elements.length > 10) {
-                    element.put("proc_name", elements[1]);
-                    element.put("pid", elements[2]);
-                    element.put("user", elements[3]);
-                    element.put("virtual_memory", elements[4]);
-                    element.put("physical_memory", elements[5]);
-                    element.put("cpu_usage", elements[6]);
-                    element.put("start_time", elements[7]);
-                    element.put("proc_time", elements[8]);
-                    element.put("priority", elements[9]);                    
-                    element.put("command", elements[10]);
+                    int index = 0;
+                    element.put("proc_name", elements[index++]);
+                    element.put("pid", elements[index++]);
+                    element.put("user", elements[index++]);
+                    element.put("virtual_memory", elements[index++]);
+                    element.put("physical_memory", elements[index++]);
+                    element.put("cpu_usage", elements[index++]);
+                    element.put("start_time", elements[index++]);
+                    element.put("proc_time", elements[index++]);
+                    element.put("priority", elements[index++]);                    
+                    element.put("command", elements[index++]);
 
                     processesDataList.add(element);
                 }
