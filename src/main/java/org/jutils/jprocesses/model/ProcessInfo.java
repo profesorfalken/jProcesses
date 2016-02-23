@@ -112,4 +112,8 @@ public class ProcessInfo {
         this.priority = priority;
     }
     
+	@Override public String toString()
+	{
+		return "PID:" + pid + "	CPU:" + cpuUsage + "	MEM:" + physicalMemory + "	PRIORITY:" + priority + "	CMD:" + command;
+	}
 }
