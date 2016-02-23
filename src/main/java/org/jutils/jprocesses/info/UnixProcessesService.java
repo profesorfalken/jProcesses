@@ -15,14 +15,14 @@
  */
 package org.jutils.jprocesses.info;
 
-import org.jutils.jprocesses.model.JProcessesResponse;
-import org.jutils.jprocesses.model.ProcessInfo;
-import org.jutils.jprocesses.util.ProcessesUtils;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.jutils.jprocesses.model.JProcessesResponse;
+import org.jutils.jprocesses.model.ProcessInfo;
+import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
  * Service implementation for Unix/BSD systems
@@ -31,29 +31,43 @@ import java.util.Map;
  */
 class UnixProcessesService extends AbstractProcessesService {
 
-    //Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
-    private static final String PS_COLUMNS = "comm,pid,ruser,vsize,rss,%cpu,start,cputime,nice,command";
+    // Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
+	/* if using both comm and command the ps utility will truncate the first one of them.
+	the fully expanded text columns must be the last one in the list of options
+	there is a difference in displaying comm: 
+	    on Linux: comm means the base of the binary file, e.g. bash
+	    on UNIX: comm means the full binary path, e.g. /bin/bash
+	*/
+	private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,start,cputime,nice,comm";
+	private static final int PS_COLUMNS_COUNT = PS_COLUMNS.split( "," ).length;
 
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
         String[] dataStringLines = rawData.split("\\r?\\n");
 
         for (final String dataLine : dataStringLines) {
-            if (!(dataLine.trim().startsWith("COMMAND"))) {
+			// skip first line
+			// PID RUSER VSZ RSS %CPU STARTED TIME NI COMM
+			if (!( dataLine.trim().startsWith( "PID" ) ))
+			{
                 Map<String, String> element = new HashMap<String, String>();
-                String[] elements = dataLine.split("\\s+");
-                if (elements.length > 10) {
-                    element.put("proc_name", elements[1]);
-                    element.put("pid", elements[2]);
-                    element.put("user", elements[3]);
-                    element.put("virtual_memory", elements[4]);
-                    element.put("physical_memory", elements[5]);
-                    element.put("cpu_usage", elements[6]);
-                    element.put("start_time", elements[7]);
-                    element.put("proc_time", elements[8]);
-                    element.put("priority", elements[9]);                    
-                    element.put("command", elements[10]);
-
+				// ensure that we don't split the command
+				String[] elements = dataLine.trim().split( "\\s+", PS_COLUMNS_COUNT );
+				if (elements.length >= PS_COLUMNS_COUNT)
+				{
+                	// the trick is to use a column index and increment it stepwise
+                	// so we can reorder columns at any time and forged about the numbers
+					int col = 0;
+					element.put( "pid", elements[col++] );
+					element.put( "user", elements[col++] );
+					element.put( "virtual_memory", elements[col++] );
+					element.put( "physical_memory", elements[col++] );
+					element.put( "cpu_usage", elements[col++] );
+					element.put( "start_time", elements[col++] );
+					element.put( "proc_time", elements[col++] );
+					element.put( "priority", elements[col++] );
+					element.put( "command", elements[col++] );
+					element.put( "proc_name", element.get( "command" ) );
                     processesDataList.add(element);
                 }
             }
@@ -66,10 +80,9 @@ class UnixProcessesService extends AbstractProcessesService {
     protected String getProcessesData(String name) {
         if (name != null) {
             return ProcessesUtils.executeCommand("bash", "-c", 
-                    "ps o " + PS_COLUMNS + " -e | grep \"^" + name + "[[:blank:]]\"");
+				"ps -e -o " + PS_COLUMNS + " | grep \"" + name + "\" | grep -v \"grep " + name + "\"" );
         }
-        return ProcessesUtils.executeCommand("ps",
-                "o", PS_COLUMNS, "-e");
+        return ProcessesUtils.executeCommand("ps", "-e", "-o", PS_COLUMNS );
     }
 
     @Override
@@ -102,7 +115,7 @@ class UnixProcessesService extends AbstractProcessesService {
     public ProcessInfo getProcess(int pid) {
         List<Map<String, String>> processList
                 = parseList(ProcessesUtils.executeCommand("ps",
-                                "o", PS_COLUMNS, "-p", String.valueOf(pid)));
+				"-o", PS_COLUMNS, "-p", String.valueOf( pid ) ) );
 
         if (processList != null && !processList.isEmpty()) {
             Map<String, String> processData = processList.get(0);
