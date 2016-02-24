@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jutils.jprocesses.util.OSDetector;
 
 /**
  * Service implementation for Unix/BSD systems
@@ -66,8 +67,13 @@ class UnixProcessesService extends AbstractProcessesService {
     @Override
     protected String getProcessesData(String name) {
         if (name != null) {
-            return ProcessesUtils.executeCommand("bash", "-c", 
+            if (OSDetector.isLinux()) {
+                return ProcessesUtils.executeCommand("ps", 
+                    "o", PS_COLUMNS, "-C", name);
+            } else {
+                return ProcessesUtils.executeCommand("bash", "-c", 
                     "ps o " + PS_COLUMNS + " -e | grep \"^" + name + "[[:blank:]]\"");
+            }
         }
         return ProcessesUtils.executeCommand("ps",
                 "o", PS_COLUMNS, "-e");

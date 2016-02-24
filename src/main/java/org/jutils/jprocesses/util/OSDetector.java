@@ -35,6 +35,10 @@ public class OSDetector {
     public static boolean isUnix() {
         return (OS.contains("nix") || OS.contains("nux") || OS.contains("aix") || OS.matches( "mac.*os.*x" ));
     }
+    
+    public static boolean isLinux() {
+        return (OS.contains("linux"));
+    }
 
     public static boolean isSolaris() {
         return (OS.contains("sunos"));
