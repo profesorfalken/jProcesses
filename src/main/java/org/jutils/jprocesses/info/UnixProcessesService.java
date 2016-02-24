@@ -32,7 +32,7 @@ import java.util.Map;
 class UnixProcessesService extends AbstractProcessesService {
 
     //Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
-    private static final String PS_COLUMNS = "comm,pid,ruser,vsize,rss,%cpu,start,cputime,nice,command";
+    private static final String PS_COLUMNS = "ucomm,pid,ruser,vsize,rss,%cpu,start,cputime,nice,command";
 
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
