@@ -24,22 +24,25 @@ import java.util.Map;
 
 /**
  * Info related with processes
- * 
+ *
  * @author Javier Garcia Alonso
  */
-abstract class AbstractProcessesService implements ProcessesService{
+abstract class AbstractProcessesService implements ProcessesService {
+
+    protected String nameFilter = null;
+
     public List<ProcessInfo> getList() {
         return getList(null);
     }
-    
+
     public List<ProcessInfo> getList(String name) {
         String rawData = getProcessesData(name);
-        
-        List<Map<String, String>> mapList =  parseList(rawData);
-        
+
+        List<Map<String, String>> mapList = parseList(rawData);
+
         return buildInfoFromMap(mapList);
     }
-    
+
     public JProcessesResponse killProcess(int pid) {
         return kill(pid);
     }
@@ -47,19 +50,19 @@ abstract class AbstractProcessesService implements ProcessesService{
     public JProcessesResponse killProcessGracefully(int pid) {
         return killGracefully(pid);
     }
-    
+
     protected abstract List<Map<String, String>> parseList(String rawData);
 
     protected abstract String getProcessesData(String name);
-    
+
     protected abstract JProcessesResponse kill(int pid);
 
     protected abstract JProcessesResponse killGracefully(int pid);
 
     private List<ProcessInfo> buildInfoFromMap(List<Map<String, String>> mapList) {
         List<ProcessInfo> infoList = new ArrayList<ProcessInfo>();
-        
-        for (final Map<String, String> map: mapList) {
+
+        for (final Map<String, String> map : mapList) {
             ProcessInfo info = new ProcessInfo();
             info.setPid(map.get("pid"));
             info.setName(map.get("proc_name"));
@@ -71,11 +74,20 @@ abstract class AbstractProcessesService implements ProcessesService{
             info.setUser(map.get("user"));
             info.setVirtualMemory(map.get("virtual_memory"));
             info.setPriority(map.get("priority"));
-            
+
             infoList.add(info);
         }
-        
+
         return infoList;
     }
-    
+
+    protected void filterByName(List<Map<String, String>> processesDataList) {
+        List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
+        for (final Map<String, String> process : processesDataList) {
+            if (!nameFilter.equals(process.get("proc_name"))) {
+                processesToRemove.add(process);
+            }
+        }
+        processesDataList.removeAll(processesToRemove);
+    }
 }

@@ -60,6 +60,10 @@ class UnixProcessesService extends AbstractProcessesService {
                 }
             }
         }
+        
+        if (nameFilter != null) {
+            filterByName(processesDataList);
+        }
 
         return processesDataList;
     }
@@ -71,8 +75,9 @@ class UnixProcessesService extends AbstractProcessesService {
                 return ProcessesUtils.executeCommand("ps", 
                     "o", PS_COLUMNS, "-C", name);
             } else {
-                return ProcessesUtils.executeCommand("bash", "-c", 
-                    "ps o " + PS_COLUMNS + " -e | grep \"^" + name + "[[:blank:]]\"");
+                this.nameFilter = name;
+                /*return ProcessesUtils.executeCommand("bash", "-c", 
+                    "ps o " + PS_COLUMNS + " -e | grep \"^" + name + "[[:blank:]]\"");*/
             }
         }
         return ProcessesUtils.executeCommand("ps",

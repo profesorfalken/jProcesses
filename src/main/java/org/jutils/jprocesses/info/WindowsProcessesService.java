@@ -40,8 +40,6 @@ class WindowsProcessesService extends AbstractProcessesService {
     private final Map<String, String> userData = new HashMap<String, String>();
     private final Map<String, String> cpuData = new HashMap<String, String>();
 
-    private String nameFilter = null;
-
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
 
@@ -73,13 +71,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
 
         if (nameFilter != null) {
-            List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
-            for (final Map<String, String> process : processesDataList) {
-                if (!nameFilter.equals(process.get("proc_name"))) {
-                    processesToRemove.add(process);
-                }
-            }
-            processesDataList.removeAll(processesToRemove);
+            filterByName(processesDataList);
         }
 
         return processesDataList;
