@@ -15,15 +15,12 @@
  */
 package org.jutils.jprocesses.info;
 
+import java.util.*;
+
 import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
-import org.jutils.jprocesses.util.ProcessesUtils;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.jutils.jprocesses.util.OSDetector;
+import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
  * Service implementation for Unix/BSD systems
@@ -33,34 +30,41 @@ import org.jutils.jprocesses.util.OSDetector;
 class UnixProcessesService extends AbstractProcessesService {
 
     //Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
-    private static final String PS_COLUMNS = "ucomm,pid,ruser,vsize,rss,%cpu,start,cputime,nice,command";
+	private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,start,cputime,nice,ucomm";
     private static final String PS_FULL_COMMAND = "pid,command";
     
     private static final int PS_COLUMNS_SIZE = PS_COLUMNS.split(",").length;
     private static final int PS_FULL_COMMAND_SIZE = PS_FULL_COMMAND.split(",").length;
 
-    protected List<Map<String, String>> parseList(String rawData) {
+	protected List<Map<String, String>> parseList(String rawData)
+	{
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
         String[] dataStringLines = rawData.split("\\r?\\n");
 
         int index;
         for (final String dataLine : dataStringLines) {
-            if (!(dataLine.trim().startsWith("COMMAND"))) {
-                Map<String, String> element = new HashMap<String, String>();
-                String[] elements = dataLine.split("\\s+", PS_COLUMNS_SIZE);
-                
-                index = 0;
-                
-                element.put("proc_name", elements[index++]);
-                element.put("pid", elements[index++]);
-                element.put("user", elements[index++]);
-                element.put("virtual_memory", elements[index++]);
-                element.put("physical_memory", elements[index++]);
-                element.put("cpu_usage", elements[index++]);
-                element.put("start_time", elements[index++]);
-                element.put("proc_time", elements[index++]);
-                element.put("priority", elements[index++]);
-                element.put("command", elements[index++]);
+			String line = dataLine.trim();
+			if (line.startsWith( "PID" ))
+			{
+				// skip header
+			}
+			else
+			{
+				// LinkedHashMap keeps the insertion order, thus easier to debug
+				Map<String, String> element = new LinkedHashMap<String, String>();
+				String[] elements = line.split( "\\s+", PS_COLUMNS_SIZE );
+				index = 0;
+				element.put( "pid", elements[index++] );
+				element.put( "user", elements[index++] );
+				element.put( "virtual_memory", elements[index++] );
+				element.put( "physical_memory", elements[index++] );
+				element.put( "cpu_usage", elements[index++] );
+				element.put( "start_time", elements[index++] );
+				element.put( "proc_time", elements[index++] );
+				element.put( "priority", elements[index++] );
+				element.put( "proc_name", elements[index++] );
+				// first init full command by content of proc_name
+				element.put( "command", elements[index - 1] );
 
                 processesDataList.add(element);                
             }
@@ -79,13 +83,13 @@ class UnixProcessesService extends AbstractProcessesService {
         if (name != null) {
             if (OSDetector.isLinux()) {
                 return ProcessesUtils.executeCommand("ps",
-                        "o", PS_COLUMNS, "-C", name);
+						"-o", PS_COLUMNS, "-C", name );
             } else {
                 this.nameFilter = name;
             }
         }
         return ProcessesUtils.executeCommand("ps",
-                "o", PS_COLUMNS, "-e");
+				"-e", "-o", PS_COLUMNS );
     }
 
     @Override
@@ -118,7 +122,7 @@ class UnixProcessesService extends AbstractProcessesService {
     public ProcessInfo getProcess(int pid) {
         List<Map<String, String>> processList
                 = parseList(ProcessesUtils.executeCommand("ps",
-                                "o", PS_COLUMNS, "-p", String.valueOf(pid)));
+				"-o", PS_COLUMNS, "-p", String.valueOf( pid ) ) );
 
         if (processList != null && !processList.isEmpty()) {
             Map<String, String> processData = processList.get(0);
@@ -142,7 +146,7 @@ class UnixProcessesService extends AbstractProcessesService {
     private void loadFullCommandData(List<Map<String, String>> processesDataList) {
         Map<String, String> commandsMap = new HashMap<String, String>();
         String data = ProcessesUtils.executeCommand("ps",
-                "o", PS_FULL_COMMAND, "-e");
+				"-e", "-o", PS_FULL_COMMAND );
         String[] dataStringLines = data.split("\\r?\\n");
 
         for (final String dataLine : dataStringLines) {
