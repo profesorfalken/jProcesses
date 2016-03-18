@@ -22,7 +22,12 @@ import org.jutils.jprocesses.util.OSDetector;
  * 
  * @author Javier Garcia Alonso
  */
-public class ProcessesFactory {	
+public class ProcessesFactory {
+    
+    //Hide constructor
+    private ProcessesFactory() {
+    }
+    
    //use getShape method to get object of type shape 
    public static ProcessesService getService(){     
       if (OSDetector.isWindows()) {

@@ -31,10 +31,12 @@ abstract class AbstractProcessesService implements ProcessesService {
 
     protected String nameFilter = null;
 
+    @Override
     public List<ProcessInfo> getList() {
         return getList(null);
     }
 
+    @Override
     public List<ProcessInfo> getList(String name) {
         String rawData = getProcessesData(name);
 
@@ -43,10 +45,12 @@ abstract class AbstractProcessesService implements ProcessesService {
         return buildInfoFromMap(mapList);
     }
 
+    @Override
     public JProcessesResponse killProcess(int pid) {
         return kill(pid);
     }
 
+    @Override
     public JProcessesResponse killProcessGracefully(int pid) {
         return killGracefully(pid);
     }

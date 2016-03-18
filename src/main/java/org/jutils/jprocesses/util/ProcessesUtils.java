@@ -32,6 +32,7 @@ public class ProcessesUtils {
 
     public static String executeCommand(String... command) {
         StringBuilder commandOutput = new StringBuilder();
+        BufferedReader processOutput = null;
 
         try {
             Process process = Runtime.getRuntime().exec(command);
@@ -40,8 +41,6 @@ public class ProcessesUtils {
             } catch (InterruptedException ex) {
                 Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            BufferedReader processOutput;
 
             if (process.exitValue() == 0) {
                 processOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -57,6 +56,14 @@ public class ProcessesUtils {
             }
         } catch (IOException ex) {
             Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                if (processOutput != null) {
+                    processOutput.close();
+                }
+            } catch (IOException ioe) {
+                Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ioe);
+            }
         }
 
         return commandOutput.toString();

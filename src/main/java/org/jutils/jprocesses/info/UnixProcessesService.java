@@ -30,43 +30,40 @@ import org.jutils.jprocesses.util.ProcessesUtils;
 class UnixProcessesService extends AbstractProcessesService {
 
     //Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
-	private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,start,cputime,nice,ucomm";
+    private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,start,cputime,nice,ucomm";
     private static final String PS_FULL_COMMAND = "pid,command";
-    
+
     private static final int PS_COLUMNS_SIZE = PS_COLUMNS.split(",").length;
     private static final int PS_FULL_COMMAND_SIZE = PS_FULL_COMMAND.split(",").length;
 
-	protected List<Map<String, String>> parseList(String rawData)
-	{
+    @Override
+    protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
         String[] dataStringLines = rawData.split("\\r?\\n");
 
         int index;
         for (final String dataLine : dataStringLines) {
-			String line = dataLine.trim();
-			if (line.startsWith( "PID" ))
-			{
-				// skip header
-			}
-			else
-			{
-				// LinkedHashMap keeps the insertion order, thus easier to debug
-				Map<String, String> element = new LinkedHashMap<String, String>();
-				String[] elements = line.split( "\\s+", PS_COLUMNS_SIZE );
-				index = 0;
-				element.put( "pid", elements[index++] );
-				element.put( "user", elements[index++] );
-				element.put( "virtual_memory", elements[index++] );
-				element.put( "physical_memory", elements[index++] );
-				element.put( "cpu_usage", elements[index++] );
-				element.put( "start_time", elements[index++] );
-				element.put( "proc_time", elements[index++] );
-				element.put( "priority", elements[index++] );
-				element.put( "proc_name", elements[index++] );
-				// first init full command by content of proc_name
-				element.put( "command", elements[index - 1] );
+            String line = dataLine.trim();
+            if (line.startsWith("PID")) {
+                // skip header
+            } else {
+                // LinkedHashMap keeps the insertion order, thus easier to debug
+                Map<String, String> element = new LinkedHashMap<String, String>();
+                String[] elements = line.split("\\s+", PS_COLUMNS_SIZE);
+                index = 0;
+                element.put("pid", elements[index++]);
+                element.put("user", elements[index++]);
+                element.put("virtual_memory", elements[index++]);
+                element.put("physical_memory", elements[index++]);
+                element.put("cpu_usage", elements[index++]);
+                element.put("start_time", elements[index++]);
+                element.put("proc_time", elements[index++]);
+                element.put("priority", elements[index++]);
+                element.put("proc_name", elements[index++]);
+                // first init full command by content of proc_name
+                element.put("command", elements[index - 1]);
 
-                processesDataList.add(element);                
+                processesDataList.add(element);
             }
         }
         loadFullCommandData(processesDataList);
@@ -83,13 +80,13 @@ class UnixProcessesService extends AbstractProcessesService {
         if (name != null) {
             if (OSDetector.isLinux()) {
                 return ProcessesUtils.executeCommand("ps",
-						"-o", PS_COLUMNS, "-C", name );
+                        "-o", PS_COLUMNS, "-C", name);
             } else {
                 this.nameFilter = name;
             }
         }
         return ProcessesUtils.executeCommand("ps",
-				"-e", "-o", PS_COLUMNS );
+                "-e", "-o", PS_COLUMNS);
     }
 
     @Override
@@ -110,6 +107,7 @@ class UnixProcessesService extends AbstractProcessesService {
         return response;
     }
 
+    @Override
     public JProcessesResponse changePriority(int pid, int priority) {
         JProcessesResponse response = new JProcessesResponse();
         if (ProcessesUtils.executeCommandAndGetCode("renice", String.valueOf(priority),
@@ -119,10 +117,11 @@ class UnixProcessesService extends AbstractProcessesService {
         return response;
     }
 
+    @Override
     public ProcessInfo getProcess(int pid) {
         List<Map<String, String>> processList
                 = parseList(ProcessesUtils.executeCommand("ps",
-				"-o", PS_COLUMNS, "-p", String.valueOf( pid ) ) );
+                                "-o", PS_COLUMNS, "-p", String.valueOf(pid)));
 
         if (processList != null && !processList.isEmpty()) {
             Map<String, String> processData = processList.get(0);
@@ -146,7 +145,7 @@ class UnixProcessesService extends AbstractProcessesService {
     private void loadFullCommandData(List<Map<String, String>> processesDataList) {
         Map<String, String> commandsMap = new HashMap<String, String>();
         String data = ProcessesUtils.executeCommand("ps",
-				"-e", "-o", PS_FULL_COMMAND );
+                "-e", "-o", PS_FULL_COMMAND);
         String[] dataStringLines = data.split("\\r?\\n");
 
         for (final String dataLine : dataStringLines) {

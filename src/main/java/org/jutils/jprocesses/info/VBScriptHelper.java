@@ -30,12 +30,19 @@ import java.util.logging.Logger;
  * @author Javier Garcia Alonso
  */
 class VBScriptHelper {
+
     private static final String CRLF = "\r\n";
+
+    //Hide constructor
+    public VBScriptHelper() {
+    }
 
     private static String executeScript(String scriptCode) {
         String scriptResponse = "";
         File tmpFile = null;
         FileWriter writer = null;
+        BufferedReader processOutput = null;
+        BufferedReader errorOutput = null;
 
         try {
             tmpFile = File.createTempFile("wmi4java" + new Date().getTime(), ".vbs");
@@ -46,7 +53,7 @@ class VBScriptHelper {
 
             Process process = Runtime.getRuntime().exec(
                     new String[]{"cmd.exe", "/C", "cscript.exe", "/NoLogo", tmpFile.getAbsolutePath()});
-            BufferedReader processOutput
+            processOutput
                     = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = processOutput.readLine()) != null) {
@@ -56,7 +63,7 @@ class VBScriptHelper {
             }
 
             if (scriptResponse.isEmpty()) {
-                BufferedReader errorOutput
+                errorOutput
                         = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String errorResponse = "";
                 while ((line = errorOutput.readLine()) != null) {
@@ -67,12 +74,19 @@ class VBScriptHelper {
                 if (!errorResponse.isEmpty()) {
                     Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, "WMI operation finished in error: ");
                 }
+                errorOutput.close();
             }
 
         } catch (Exception ex) {
             Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
+                if (processOutput != null) {
+                    processOutput.close();
+                }
+                if (errorOutput != null) {
+                    errorOutput.close();
+                }
                 if (writer != null) {
                     writer.close();
                 }
@@ -88,7 +102,7 @@ class VBScriptHelper {
 
     /**
      * Retrieve the owner of the processes.
-     * 
+     *
      * @return list of strings composed by PID and owner, separated by :
      */
     public static String getProcessesOwner() {
@@ -116,7 +130,7 @@ class VBScriptHelper {
 
     /**
      * Changes the priority of a process
-     * 
+     *
      * @param pid the PID
      * @param newPriority the priority to set @see Windo
      * @return the output of the script
