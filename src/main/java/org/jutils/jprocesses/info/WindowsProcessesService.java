@@ -22,6 +22,7 @@ import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,33 +41,33 @@ class WindowsProcessesService extends AbstractProcessesService {
     private final Map<String, String> userData = new HashMap<String, String>();
     private final Map<String, String> cpuData = new HashMap<String, String>();
 
+    private static final String LINE_BREAK_REGEX = "\\r?\\n";
+
+    private static final Map<String, String> keyMap;
+
+    static {
+        Map<String, String> tmpMap = new HashMap<String, String>();
+        tmpMap.put("Name", "proc_name");
+        tmpMap.put("ProcessId", "pid");
+        tmpMap.put("UserModeTime", "proc_time");
+        tmpMap.put("Priority", "priority");
+        tmpMap.put("VirtualSize", "virtual_memory");
+        tmpMap.put("WorkingSetSize", "physical_memory");
+        tmpMap.put("CommandLine", "command");
+        tmpMap.put("CreationDate", "start_time");
+
+        keyMap = Collections.unmodifiableMap(tmpMap);
+    }
+
+    @Override
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
 
-        String[] dataStringLines = rawData.split("\\r?\\n");
+        String[] dataStringLines = rawData.split(LINE_BREAK_REGEX);
 
-        Map<String, String> processMap = null;
         for (final String dataLine : dataStringLines) {
             if (dataLine.trim().length() > 0) {
-                if (dataLine.startsWith("Caption")) {
-                    if (processMap != null && processMap.size() > 0) {
-                        processesDataList.add(processMap);
-                    }
-                    processMap = new HashMap<String, String>();
-                }
-
-                if (processMap != null) {
-                    String[] dataStringInfo = dataLine.split(":", 2);
-                    if (dataStringInfo.length == 2) {
-                        processMap.put(normalizeKey(dataStringInfo[0].trim()),
-                                normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
-
-                        if ("ProcessId".equals(dataStringInfo[0].trim())) {
-                            processMap.put("user", userData.get(dataStringInfo[1].trim()));
-                            processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
-                        }
-                    }
-                }
+                processLine(dataLine, processesDataList);
             }
         }
 
@@ -75,6 +76,29 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
 
         return processesDataList;
+    }
+
+    private void processLine(String dataLine, List<Map<String, String>> processesDataList) {
+        Map<String, String> processMap = null;
+        if (dataLine.startsWith("Caption")) {
+            if (processMap != null && processMap.size() > 0) {
+                processesDataList.add(processMap);
+            }
+            processMap = new HashMap<String, String>();
+        }
+
+        if (processMap != null) {
+            String[] dataStringInfo = dataLine.split(":", 2);
+            if (dataStringInfo.length == 2) {
+                processMap.put(normalizeKey(dataStringInfo[0].trim()),
+                        normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
+
+                if ("ProcessId".equals(dataStringInfo[0].trim())) {
+                    processMap.put("user", userData.get(dataStringInfo[1].trim()));
+                    processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
+                }
+            }
+        }
     }
 
     @Override
@@ -109,37 +133,18 @@ class WindowsProcessesService extends AbstractProcessesService {
     }
 
     private String normalizeKey(String origKey) {
-        if ("Name".equals(origKey)) {
-            return "proc_name";
-        } else if ("ProcessId".equals(origKey)) {
-            return "pid";
-        } else if ("UserModeTime".equals(origKey)) {
-            return "proc_time";
-        } else if ("Priority".equals(origKey)) {
-            return "priority";
-        } else if ("VirtualSize".equals(origKey)) {
-            return "virtual_memory";
-        } else if ("WorkingSetSize".equals(origKey)) {
-            return "physical_memory";
-        } else if ("CommandLine".equals(origKey)) {
-            return "command";
-        } else if ("CreationDate".equals(origKey)) {
-            return "start_time";
-        }
-
-        return origKey;
+        return keyMap.get(origKey);
     }
 
     private String normalizeValue(String origKey, String origValue) {
         if ("UserModeTime".equals(origKey)) {
-            long longOrigValue = Long.valueOf(origValue);
             //100 nano to second - https://msdn.microsoft.com/en-us/library/windows/desktop/aa394372(v=vs.85).aspx
-            long seconds = longOrigValue * 100 / 1000000 / 1000;
+            long seconds = Long.parseLong(origValue) * 100 / 1000000 / 1000;
             return nomalizeTime(seconds);
         }
         if ("VirtualSize".equals(origKey) || "WorkingSetSize".equals(origKey)) {
             if (!(origValue.isEmpty())) {
-                return (String.valueOf(Long.valueOf(origValue) / 1024));
+                return String.valueOf(Long.parseLong(origValue) / 1024);
             }
         }
         if ("CreationDate".equals(origKey)) {
@@ -165,39 +170,28 @@ class WindowsProcessesService extends AbstractProcessesService {
     private void fillExtraProcessData() {
         String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);
 
-        String[] dataStringLines = perfData.split("\\r?\\n");
+        String[] dataStringLines = perfData.split(LINE_BREAK_REGEX);
         String pid = null;
         String cpuUsage = null;
         for (final String dataLine : dataStringLines) {
             if (dataLine.trim().length() > 0) {
+
                 if (dataLine.startsWith("Caption")) {
                     if (pid != null && cpuUsage != null) {
                         cpuData.put(pid, cpuUsage);
                     }
                     continue;
                 }
-
-                if (dataLine.startsWith("IDProcess")) {
-                    String[] dataStringInfo = dataLine.split(":");
-                    if (dataStringInfo.length == 2) {
-                        pid = dataStringInfo[1].trim();
-                    }
-                    continue;
-                }
-
-                if (dataLine.startsWith("PercentProcessorTime")) {
-                    String[] dataStringInfo = dataLine.split(":");
-                    if (dataStringInfo.length == 2) {
-                        cpuUsage = dataStringInfo[1].trim();
-                    }
-                }
+                
+                pid = checkAndGetDataInLine("IDProcess", dataLine);
+                cpuUsage = checkAndGetDataInLine("PercentProcessorTime", dataLine);
             }
         }
 
         String processesData = VBScriptHelper.getProcessesOwner();
 
         if (processesData != null) {
-            dataStringLines = processesData.split("\\r?\\n");
+            dataStringLines = processesData.split(LINE_BREAK_REGEX);
             for (final String dataLine : dataStringLines) {
                 String[] dataStringInfo = dataLine.split(":");
                 if (dataStringInfo.length == 2) {
@@ -207,6 +201,17 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
     }
 
+    private String checkAndGetDataInLine(String dataName, String dataLine) {
+        if (dataLine.startsWith("IDProcess")) {
+            String[] dataStringInfo = dataLine.split(":");
+            if (dataStringInfo.length == 2) {
+                return dataStringInfo[1].trim();
+            }
+        }
+        return null;
+    }
+
+    @Override
     public JProcessesResponse changePriority(int pid, int priority) {
         JProcessesResponse response = new JProcessesResponse();
         String message = VBScriptHelper.changePriority(pid, priority);
@@ -218,6 +223,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         return response;
     }
 
+    @Override
     public ProcessInfo getProcess(int pid) {
         List<Map<String, String>> allProcesses = parseList(getProcessesData(null));
 

@@ -34,7 +34,7 @@ class VBScriptHelper {
     private static final String CRLF = "\r\n";
 
     //Hide constructor
-    public VBScriptHelper() {
+    private VBScriptHelper() {
     }
 
     private static String executeScript(String scriptCode) {
