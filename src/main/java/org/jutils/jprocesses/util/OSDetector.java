@@ -22,25 +22,29 @@ package org.jutils.jprocesses.util;
  */
 public class OSDetector {
 
-    private static String OS = System.getProperty("os.name").toLowerCase();
+    private static final String OS = System.getProperty("os.name").toLowerCase();
+    
+    //Hide constructor
+    private OSDetector() {        
+    }
 
     public static boolean isWindows() {
-        return (OS.contains("win"));
+        return OS.contains("win");
     }
 
     public static boolean isMac() {
-        return (OS.contains("mac"));
+        return OS.contains("mac");
     }
 
     public static boolean isUnix() {
-        return (OS.contains("nix") || OS.contains("nux") || OS.contains("aix") || OS.matches( "mac.*os.*x" ));
+        return OS.contains("nix") || OS.contains("nux") || OS.contains("aix") || OS.matches( "mac.*os.*x" );
     }
     
     public static boolean isLinux() {
-        return (OS.contains("linux"));
+        return OS.contains("linux");
     }
 
     public static boolean isSolaris() {
-        return (OS.contains("sunos"));
+        return OS.contains("sunos");
     }
 }

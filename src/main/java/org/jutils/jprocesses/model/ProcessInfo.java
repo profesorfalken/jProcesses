@@ -17,10 +17,11 @@ package org.jutils.jprocesses.model;
 
 /**
  * Model that encapsulates process information
- * 
+ *
  * @author Javier Garcia Alonso
  */
 public class ProcessInfo {
+
     private String pid;
     private String time;
     private String name;
@@ -111,9 +112,10 @@ public class ProcessInfo {
     public void setPriority(String priority) {
         this.priority = priority;
     }
-    
-	@Override public String toString()
-	{
-		return "PID:" + pid + "	CPU:" + cpuUsage + "	MEM:" + physicalMemory + "	PRIORITY:" + priority + "	CMD:" + command;
-	}
+
+    @Override
+    public String toString() {
+        return "PID:" + pid + "	CPU:" + cpuUsage + "	MEM:" + physicalMemory
+                + "	PRIORITY:" + priority + "	CMD:" + command;
+    }
 }

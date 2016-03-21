@@ -132,11 +132,11 @@ class WindowsProcessesService extends AbstractProcessesService {
         return response;
     }
 
-    private String normalizeKey(String origKey) {
+    private static String normalizeKey(String origKey) {
         return keyMap.get(origKey);
     }
 
-    private String normalizeValue(String origKey, String origValue) {
+    private static String normalizeValue(String origKey, String origValue) {
         if ("UserModeTime".equals(origKey)) {
             //100 nano to second - https://msdn.microsoft.com/en-us/library/windows/desktop/aa394372(v=vs.85).aspx
             long seconds = Long.parseLong(origValue) * 100 / 1000000 / 1000;
@@ -160,7 +160,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         return origValue;
     }
 
-    private String nomalizeTime(long seconds) {
+    private static String nomalizeTime(long seconds) {
         long hours = seconds / 3600;
         long minutes = (seconds % 3600) / 60;
 
@@ -174,8 +174,8 @@ class WindowsProcessesService extends AbstractProcessesService {
         String pid = null;
         String cpuUsage = null;
         for (final String dataLine : dataStringLines) {
+            
             if (dataLine.trim().length() > 0) {
-
                 if (dataLine.startsWith("Caption")) {
                     if (pid != null && cpuUsage != null) {
                         cpuData.put(pid, cpuUsage);
@@ -193,7 +193,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         if (processesData != null) {
             dataStringLines = processesData.split(LINE_BREAK_REGEX);
             for (final String dataLine : dataStringLines) {
-                String[] dataStringInfo = dataLine.split(":");
+                String[] dataStringInfo = dataLine.split(":", 2);
                 if (dataStringInfo.length == 2) {
                     userData.put(dataStringInfo[0].trim(), dataStringInfo[1].trim());
                 }
@@ -201,8 +201,8 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
     }
 
-    private String checkAndGetDataInLine(String dataName, String dataLine) {
-        if (dataLine.startsWith("IDProcess")) {
+    private static String checkAndGetDataInLine(String dataName, String dataLine) {
+        if (dataLine.startsWith(dataName)) {
             String[] dataStringInfo = dataLine.split(":");
             if (dataStringInfo.length == 2) {
                 return dataStringInfo[1].trim();

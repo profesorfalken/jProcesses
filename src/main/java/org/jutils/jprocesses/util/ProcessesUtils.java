@@ -23,25 +23,40 @@ import java.util.logging.Logger;
 
 /**
  * Utility methods
- * 
+ *
  * @author Javier Garcia Alonso
  */
 public class ProcessesUtils {
-    
+
     private static final String CRLF = "\r\n";
 
+    //Hide constructor
+    private ProcessesUtils() {
+    }
+
     public static String executeCommand(String... command) {
-        StringBuilder commandOutput = new StringBuilder();
-        BufferedReader processOutput = null;
+        String commandOutput = null;
 
         try {
             Process process = Runtime.getRuntime().exec(command);
-            try {
-                process.waitFor();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            commandOutput = readData(process);
+        } catch (IOException ex) {
+            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
+        return commandOutput;
+    }
+
+    private static String readData(Process process) {
+        StringBuilder commandOutput = new StringBuilder();
+        BufferedReader processOutput = null;
+        try {
+            process.waitFor();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
             if (process.exitValue() == 0) {
                 processOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
             } else {
@@ -68,20 +83,17 @@ public class ProcessesUtils {
 
         return commandOutput.toString();
     }
-    
+
     public static int executeCommandAndGetCode(String... command) {
         Process process;
 
         try {
             process = Runtime.getRuntime().exec(command);
-            try {
-                process.waitFor();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
-                return -1;
-            }            
-            
+            process.waitFor();
         } catch (IOException ex) {
+            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+            return -1;
+        } catch (InterruptedException ex) {
             Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
             return -1;
         }

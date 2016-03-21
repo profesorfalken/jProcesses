@@ -142,7 +142,7 @@ class UnixProcessesService extends AbstractProcessesService {
         return null;
     }
 
-    private void loadFullCommandData(List<Map<String, String>> processesDataList) {
+    private static void loadFullCommandData(List<Map<String, String>> processesDataList) {
         Map<String, String> commandsMap = new HashMap<String, String>();
         String data = ProcessesUtils.executeCommand("ps",
                 "-e", "-o", PS_FULL_COMMAND);
