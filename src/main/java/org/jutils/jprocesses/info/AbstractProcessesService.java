@@ -55,6 +55,8 @@ abstract class AbstractProcessesService implements ProcessesService {
 
     protected abstract String getProcessesData(String name);
 
+    protected abstract String getProcessesData(int pid);
+
     protected abstract JProcessesResponse kill(int pid);
 
     protected abstract JProcessesResponse killGracefully(int pid);

@@ -15,12 +15,16 @@
  */
 package org.jutils.jprocesses.info;
 
-import java.util.*;
-
 import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.OSDetector;
 import org.jutils.jprocesses.util.ProcessesUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Service implementation for Unix/BSD systems
@@ -90,6 +94,20 @@ class UnixProcessesService extends AbstractProcessesService {
         }
         return ProcessesUtils.executeCommand("ps",
 				"-e", "-o", PS_COLUMNS );
+    }
+
+    @Override
+    protected String getProcessesData(int pid) {
+//        ToDo Uncomment and test
+//        if (pid != 0) {
+//            if (OSDetector.isLinux()) {
+//                return ProcessesUtils.executeCommand("ps",
+//                        "-o", PS_COLUMNS, "-p", String.valueOf(pid) );
+//            }
+//        }
+//        return ProcessesUtils.executeCommand("ps",
+//                "-e", "-o", PS_COLUMNS );
+        throw new UnsupportedOperationException("Not implemented for Unix");
     }
 
     @Override

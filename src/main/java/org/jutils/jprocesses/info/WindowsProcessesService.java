@@ -22,6 +22,8 @@ import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +87,18 @@ class WindowsProcessesService extends AbstractProcessesService {
             this.nameFilter = name;
         }
 
-        return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
+        return WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PROCESS,
+                Arrays.asList("Caption","ProcessId","Name","UserModeTime","CommandLine","WorkingSetSize","CreationDate","VirtualSize","Priority"),
+                Collections.singletonList("Name like '%" + name + "%'"));
+    }
+
+    @Override
+    protected String getProcessesData(int pid) {
+        fillExtraProcessData();
+
+        return WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PROCESS,
+                Arrays.asList("Caption","ProcessId","Name","UserModeTime","CommandLine","WorkingSetSize","CreationDate","VirtualSize","Priority"),
+                Collections.singletonList("ProcessId = '" + pid + "'"));
     }
 
     @Override
