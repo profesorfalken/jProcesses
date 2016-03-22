@@ -44,6 +44,8 @@ class WindowsProcessesService extends AbstractProcessesService {
     private static final String LINE_BREAK_REGEX = "\\r?\\n";
 
     private static final Map<String, String> keyMap;
+    
+    private static Map<String, String> processMap;
 
     static {
         Map<String, String> tmpMap = new HashMap<String, String>();
@@ -79,7 +81,6 @@ class WindowsProcessesService extends AbstractProcessesService {
     }
 
     private void processLine(String dataLine, List<Map<String, String>> processesDataList) {
-        Map<String, String> processMap = null;
         if (dataLine.startsWith("Caption")) {
             if (processMap != null && processMap.size() > 0) {
                 processesDataList.add(processMap);
@@ -179,12 +180,18 @@ class WindowsProcessesService extends AbstractProcessesService {
                 if (dataLine.startsWith("Caption")) {
                     if (pid != null && cpuUsage != null) {
                         cpuData.put(pid, cpuUsage);
+                        pid = null;
+                        cpuUsage = null;
                     }
                     continue;
                 }
                 
-                pid = checkAndGetDataInLine("IDProcess", dataLine);
-                cpuUsage = checkAndGetDataInLine("PercentProcessorTime", dataLine);
+                if (pid == null) {
+                    pid = checkAndGetDataInLine("IDProcess", dataLine);
+                }
+                if (cpuUsage == null) {
+                    cpuUsage = checkAndGetDataInLine("PercentProcessorTime", dataLine);
+                }
             }
         }
 
