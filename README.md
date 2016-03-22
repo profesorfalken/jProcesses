@@ -1,5 +1,6 @@
 ![](https://img.shields.io/maven-central/v/org.jprocesses/jProcesses.svg)
 ![](https://img.shields.io/github/license/profesorfalken/jProcesses.svg)
+![](https://travis-ci.org/profesorfalken/jProcesses.svg)
 
 # jProcesses
 Get crossplatform processes details with Java
