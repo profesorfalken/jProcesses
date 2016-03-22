@@ -81,7 +81,11 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     @Override
     protected String getProcessesData(String name) {
-        fillExtraProcessData();
+        List<String> conditions = null;
+        if(name != null) {
+            conditions = Collections.singletonList("Name like '%" + name + "%'");
+        }
+        fillExtraProcessData(conditions);
 
         if (name != null) {
             this.nameFilter = name;
@@ -89,16 +93,17 @@ class WindowsProcessesService extends AbstractProcessesService {
 
         return WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PROCESS,
                 Arrays.asList("Caption","ProcessId","Name","UserModeTime","CommandLine","WorkingSetSize","CreationDate","VirtualSize","Priority"),
-                Collections.singletonList("Name like '%" + name + "%'"));
+                conditions);
     }
 
     @Override
     protected String getProcessesData(int pid) {
-        fillExtraProcessData();
+        List<String> conditions = Collections.singletonList("ProcessId = '" + pid + "'");
+        fillExtraProcessData(conditions);
 
         return WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PROCESS,
                 Arrays.asList("Caption","ProcessId","Name","UserModeTime","CommandLine","WorkingSetSize","CreationDate","VirtualSize","Priority"),
-                Collections.singletonList("ProcessId = '" + pid + "'"));
+                conditions);
     }
 
     @Override
@@ -175,8 +180,8 @@ class WindowsProcessesService extends AbstractProcessesService {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
-    private void fillExtraProcessData() {
-        String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);
+    private void fillExtraProcessData(List<String> processQueryConditions) {
+        String perfData = WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS,Arrays.asList("Caption","IDProcess","PercentProcessorTime"),processQueryConditions);
 
         String[] dataStringLines = perfData.split("\\r?\\n");
         String pid = null;
