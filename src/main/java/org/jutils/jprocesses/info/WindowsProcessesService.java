@@ -74,10 +74,6 @@ class WindowsProcessesService extends AbstractProcessesService {
             }
         }
 
-        if (nameFilter != null) {
-            filterByName(processesDataList);
-        }
-
         return processesDataList;
     }
 
