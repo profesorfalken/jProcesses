@@ -22,6 +22,7 @@ import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,7 @@ class WindowsProcessesService extends AbstractProcessesService {
     private static final String LINE_BREAK_REGEX = "\\r?\\n";
 
     private static final Map<String, String> keyMap;
-    
+
     private static Map<String, String> processMap;
 
     static {
@@ -71,10 +72,6 @@ class WindowsProcessesService extends AbstractProcessesService {
             if (dataLine.trim().length() > 0) {
                 processLine(dataLine, processesDataList);
             }
-        }
-
-        if (nameFilter != null) {
-            filterByName(processesDataList);
         }
 
         return processesDataList;
@@ -104,13 +101,25 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     @Override
     protected String getProcessesData(String name) {
-        fillExtraProcessData();
-
-        if (name != null) {
-            this.nameFilter = name;
+        List<String> conditions = null;
+        if(name != null) {
+            conditions = Collections.singletonList("Name like '%" + name + "%'");
         }
+        fillExtraProcessData(conditions);
 
-        return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
+        return WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PROCESS,
+                Arrays.asList("Caption","ProcessId","Name","UserModeTime","CommandLine","WorkingSetSize","CreationDate","VirtualSize","Priority"),
+                conditions);
+    }
+
+    @Override
+    protected String getProcessesData(int pid) {
+        List<String> conditions = Collections.singletonList("ProcessId = '" + pid + "'");
+        fillExtraProcessData(conditions);
+
+        return WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PROCESS,
+                Arrays.asList("Caption","ProcessId","Name","UserModeTime","CommandLine","WorkingSetSize","CreationDate","VirtualSize","Priority"),
+                conditions);
     }
 
     @Override
@@ -168,14 +177,14 @@ class WindowsProcessesService extends AbstractProcessesService {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
-    private void fillExtraProcessData() {
-        String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);
+    private void fillExtraProcessData(List<String> processQueryConditions) {
+        String perfData = WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS,Arrays.asList("Caption","IDProcess","PercentProcessorTime"),processQueryConditions);
 
         String[] dataStringLines = perfData.split(LINE_BREAK_REGEX);
         String pid = null;
         String cpuUsage = null;
         for (final String dataLine : dataStringLines) {
-            
+
             if (dataLine.trim().length() > 0) {
                 if (dataLine.startsWith("Caption")) {
                     if (pid != null && cpuUsage != null) {
@@ -185,7 +194,7 @@ class WindowsProcessesService extends AbstractProcessesService {
                     }
                     continue;
                 }
-                
+
                 if (pid == null) {
                     pid = checkAndGetDataInLine("IDProcess", dataLine);
                 }
