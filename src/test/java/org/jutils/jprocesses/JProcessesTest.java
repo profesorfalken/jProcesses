@@ -1,15 +1,17 @@
 package org.jutils.jprocesses;
 
-import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.model.WindowsPriority;
 import org.jutils.jprocesses.util.OSDetector;
+
+import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  *

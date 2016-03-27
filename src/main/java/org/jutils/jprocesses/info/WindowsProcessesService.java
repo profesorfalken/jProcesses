@@ -107,10 +107,6 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
         fillExtraProcessData(conditions);
 
-        if (name != null) {
-            this.nameFilter = name;
-        }
-
         return WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PROCESS,
                 Arrays.asList("Caption","ProcessId","Name","UserModeTime","CommandLine","WorkingSetSize","CreationDate","VirtualSize","Priority"),
                 conditions);
