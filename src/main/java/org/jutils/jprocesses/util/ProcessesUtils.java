@@ -100,4 +100,46 @@ public class ProcessesUtils {
 
         return process.exitValue();
     }
+
+    /**
+     * Parse Window DateTime format to time format (hh:mm:ss).
+     *
+     * @param dateTime original datetime format
+     * https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx
+     * @return string with formatted time (hh:mm:ss)
+     */
+    public static String parseWindowsDateTimeToTime(String dateTime) {
+        String returnedDate = dateTime;
+        if (dateTime != null && !dateTime.isEmpty()) {
+            String hour = dateTime.substring(8, 10);
+            String minutes = dateTime.substring(10, 12);
+            String seconds = dateTime.substring(12, 14);
+
+            returnedDate = hour + ":" + minutes + ":" + seconds;
+        }
+        return returnedDate;
+    }
+
+    /**
+     * Parse Window DateTime format to time format (MM/dd/yyyy hh:mm:ss)
+     *
+     * @param dateTime original datetime format
+     * https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx
+     * @return string with formatted time (hh:mm:ss)
+     */
+    public static String parseWindowsDateTimeToFullDate(String dateTime) {
+        String returnedDate = dateTime;
+        if (dateTime != null && !dateTime.isEmpty()) {
+            String year = dateTime.substring(0, 4);
+            String month = dateTime.substring(4, 6);
+            String day = dateTime.substring(6, 8);
+            String hour = dateTime.substring(8, 10);
+            String minutes = dateTime.substring(10, 12);
+            String seconds = dateTime.substring(12, 14);
+
+            returnedDate = month + "/" + day + "/" + year + " " + hour + ":"
+                    + minutes + ":" + seconds;
+        }
+        return returnedDate;
+    }
 }
