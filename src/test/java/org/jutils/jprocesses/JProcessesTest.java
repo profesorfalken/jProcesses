@@ -55,6 +55,8 @@ public class JProcessesTest {
             System.out.println("Physical Memory: " + processInfo.getPhysicalMemory());
             System.out.println("CPU usage: " + processInfo.getCpuUsage());
             System.out.println("Start Time: " + processInfo.getStartTime());
+            System.out.println("Start DateTime: " + 
+                    processInfo.getExtraData().get("start_datetime"));
             System.out.println("Priority: " + processInfo.getPriority());
             System.out.println("Full command: " + processInfo.getCommand());
             System.out.println("------------------");

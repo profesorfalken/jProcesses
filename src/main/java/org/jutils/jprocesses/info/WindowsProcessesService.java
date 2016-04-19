@@ -245,10 +245,7 @@ class WindowsProcessesService extends AbstractProcessesService {
                 info.setStartTime(process.get("start_time"));
                 info.setUser(process.get("user"));
                 info.setVirtualMemory(process.get("virtual_memory"));
-                info.setPriority(process.get("priority"));
-                
-                //Adds extra data
-                info.setExtraData(process);
+                info.setPriority(process.get("priority"));                
 
                 return info;
             }
