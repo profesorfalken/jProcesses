@@ -137,6 +137,9 @@ class UnixProcessesService extends AbstractProcessesService {
             info.setVirtualMemory(processData.get("virtual_memory"));
             info.setPriority(processData.get("priority"));
 
+            //Adds extra data
+            info.setExtraData(processData);
+
             return info;
         }
         return null;

@@ -98,6 +98,11 @@ class WindowsProcessesService extends AbstractProcessesService {
                     processMap.put("user", userData.get(dataStringInfo[1].trim()));
                     processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
                 }
+                
+                if ("CreationDate".equals(dataStringInfo[0].trim())) {
+                    processMap.put("start_datetime", 
+                            ProcessesUtils.parseWindowsDateTimeToFullDate(dataStringInfo[1].trim()));
+                }
             }
         }
     }
@@ -149,13 +154,7 @@ class WindowsProcessesService extends AbstractProcessesService {
             }
         }
         if ("CreationDate".equals(origKey)) {
-            if (!origValue.isEmpty()) {
-                String hour = origValue.substring(8, 10);
-                String minutes = origValue.substring(10, 12);
-                String seconds = origValue.substring(12, 14);
-
-                return hour + ":" + minutes + ":" + seconds;
-            }
+            return ProcessesUtils.parseWindowsDateTimeToSimpleTime(origValue);
         }
 
         return origValue;
@@ -247,6 +246,9 @@ class WindowsProcessesService extends AbstractProcessesService {
                 info.setUser(process.get("user"));
                 info.setVirtualMemory(process.get("virtual_memory"));
                 info.setPriority(process.get("priority"));
+                
+                //Adds extra data
+                info.setExtraData(process);
 
                 return info;
             }
