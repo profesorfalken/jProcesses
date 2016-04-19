@@ -105,10 +105,12 @@ public class ProcessesUtils {
      * Parse Window DateTime format to time format (hh:mm:ss).
      *
      * @param dateTime original datetime format
-     * https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx
+     * @see <a href="https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx">
+     * https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx</a>
+     * 
      * @return string with formatted time (hh:mm:ss)
      */
-    public static String parseWindowsDateTimeToTime(String dateTime) {
+    public static String parseWindowsDateTimeToSimpleTime(String dateTime) {
         String returnedDate = dateTime;
         if (dateTime != null && !dateTime.isEmpty()) {
             String hour = dateTime.substring(8, 10);
@@ -124,7 +126,9 @@ public class ProcessesUtils {
      * Parse Window DateTime format to time format (MM/dd/yyyy hh:mm:ss)
      *
      * @param dateTime original datetime format
-     * https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx
+     * @see <a href="https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx">
+     * https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx</a>
+     * 
      * @return string with formatted time (hh:mm:ss)
      */
     public static String parseWindowsDateTimeToFullDate(String dateTime) {
