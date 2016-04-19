@@ -30,14 +30,27 @@ import java.util.Map;
 abstract class AbstractProcessesService implements ProcessesService {
 
     protected String nameFilter = null;
+    
+    protected boolean fastMode = false;
 
     @Override
     public List<ProcessInfo> getList() {
         return getList(null);
     }
-
+    
+    @Override
+    public List<ProcessInfo> getList(boolean fastMode) {
+        return getList(null, fastMode);
+    }
+    
     @Override
     public List<ProcessInfo> getList(String name) {
+        return getList(name, false);
+    }
+
+    @Override
+    public List<ProcessInfo> getList(String name, boolean fastMode) {
+        this.fastMode = fastMode;
         String rawData = getProcessesData(name);
 
         List<Map<String, String>> mapList = parseList(rawData);

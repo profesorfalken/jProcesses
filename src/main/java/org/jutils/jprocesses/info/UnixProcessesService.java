@@ -116,9 +116,15 @@ class UnixProcessesService extends AbstractProcessesService {
         }
         return response;
     }
-
+    
     @Override
     public ProcessInfo getProcess(int pid) {
+        return getProcess (pid, false);
+    }
+
+    @Override
+    public ProcessInfo getProcess(int pid, boolean fastMode) {
+        this.fastMode = fastMode;
         List<Map<String, String>> processList
                 = parseList(ProcessesUtils.executeCommand("ps",
                                 "-o", PS_COLUMNS, "-p", String.valueOf(pid)));

@@ -45,7 +45,7 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     private static final Map<String, String> keyMap;
     
-    private static Map<String, String> processMap;
+    private static Map<String, String> processMap;    
 
     static {
         Map<String, String> tmpMap = new HashMap<String, String>();
@@ -109,7 +109,9 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     @Override
     protected String getProcessesData(String name) {
-        fillExtraProcessData();
+        if (!fastMode) {
+            fillExtraProcessData();
+        }
 
         if (name != null) {
             this.nameFilter = name;
@@ -228,9 +230,15 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
         return response;
     }
-
+    
     @Override
     public ProcessInfo getProcess(int pid) {
+        return getProcess (pid, false);
+    }
+
+    @Override
+    public ProcessInfo getProcess(int pid, boolean fastMode) {
+        this.fastMode = fastMode;
         List<Map<String, String>> allProcesses = parseList(getProcessesData(null));
 
         for (final Map<String, String> process : allProcesses) {
