@@ -163,6 +163,7 @@ class UnixProcessesService extends AbstractProcessesService {
 
         for (final Map<String, String> process : processesDataList) {
             if (commandsMap.containsKey(process.get("pid"))) {
+                System.out.println("PID: " + process.get("pid") + " COMMAND: " + commandsMap.get(process.get("pid")));
                 process.put("command", commandsMap.get(process.get("pid")));
             }
         }
