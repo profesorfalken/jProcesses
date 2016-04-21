@@ -22,6 +22,7 @@ import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -73,10 +74,11 @@ class WindowsProcessesService extends AbstractProcessesService {
             }
         }
 
+        /*
         if (nameFilter != null) {
             filterByName(processesDataList);
-        }
-
+        }*/
+        
         return processesDataList;
     }
 
@@ -114,7 +116,10 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
 
         if (name != null) {
-            this.nameFilter = name;
+            //this.nameFilter = name;
+            return WMI4Java.get().VBSEngine().queryWMIObject(WMIClass.WIN32_PROCESS,
+                 Arrays.asList("Caption","ProcessId","Name","UserModeTime","CommandLine","WorkingSetSize","CreationDate","VirtualSize","Priority"),
+                 Collections.singletonList("Name like '%" + name + "%'"));
         }
 
         return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
