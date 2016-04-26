@@ -44,7 +44,7 @@ public class JProcesses {
     public static List<ProcessInfo> getProcessList(String name) {                
         ProcessesService srv = ProcessesFactory.getService();
         
-        return srv.getList(fastMode);
+        return srv.getList(name, fastMode);
     }
     
     public static ProcessInfo getProcess(int pid) {                

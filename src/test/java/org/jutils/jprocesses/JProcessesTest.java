@@ -1,5 +1,6 @@
 package org.jutils.jprocesses;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -42,6 +43,7 @@ public class JProcessesTest {
     @Test
     public void testGetProcessList() {
         System.out.println("===============Testing getProcessList============");
+        JProcesses.fastMode = true;
         List<ProcessInfo> processesList = JProcesses.getProcessList();
 
         assertTrue(processesList != null && processesList.size() > 0);
@@ -55,26 +57,27 @@ public class JProcessesTest {
             System.out.println("Physical Memory: " + processInfo.getPhysicalMemory());
             System.out.println("CPU usage: " + processInfo.getCpuUsage());
             System.out.println("Start Time: " + processInfo.getStartTime());
-            System.out.println("Start DateTime: " + 
-                    processInfo.getExtraData().get("start_datetime"));
+            System.out.println("Start DateTime: "
+                    + processInfo.getExtraData().get("start_datetime"));
             System.out.println("Priority: " + processInfo.getPriority());
             System.out.println("Full command: " + processInfo.getCommand());
             System.out.println("------------------");
         }
         System.out.println("===============End test getProcessList============");
     }
-    
+
     /**
      * Test of getProcessList method by name, of class JProcesses.
      */
     @Test
     public void testGetProcessListByName() {
         System.out.println("===============Testing getProcessList by name============");
+        //JProcesses.fastMode = true;
         String processToSearch = "java";
         if (OSDetector.isWindows()) {
             processToSearch += ".exe";
         }
-        
+
         List<ProcessInfo> processesList = JProcesses.getProcessList(processToSearch);
 
         assertTrue(processesList != null && processesList.size() > 0);
@@ -92,9 +95,24 @@ public class JProcessesTest {
             System.out.println("Command: " + processInfo.getCommand());
             System.out.println("------------------");
         }
+
+        //Compare list with a manually retrieved list
+        List<ProcessInfo> processesListFull = JProcesses.getProcessList();
+        List<ProcessInfo> processesListFound = new ArrayList<ProcessInfo>();
+        for (final ProcessInfo process : processesListFull) {
+            if (processToSearch.equals(process.getName())) {
+                processesListFound.add(process);
+            }
+        }
+
+        assertTrue("Manually list differs from search founded " 
+                + processesListFound.size() + " instead of " + processesList.size(), 
+                processesList.size() == processesListFound.size()
+        );
+        
         System.out.println("===============End test getProcessList by name============");
     }
-    
+
     /**
      * Test of getProcessList method by name, of class JProcesses.
      */
@@ -105,7 +123,7 @@ public class JProcessesTest {
 
         System.out.println("===============End test killProcess============");
     }
-    
+
     /**
      * Test of getProcessList method by name, of class JProcesses.
      */
@@ -114,13 +132,13 @@ public class JProcessesTest {
         System.out.println("===============Testing changePriority============");
         boolean ok = JProcesses.changePriority(3260, WindowsPriority.HIGH).isSuccess();
         assertTrue(ok);
-        
+
         ProcessInfo process = JProcesses.getProcess(3260);
         assertTrue(String.valueOf(13).equals(process.getPriority()));
 
         ok = JProcesses.changePriority(3260, WindowsPriority.NORMAL).isSuccess();
         assertTrue(ok);
-        
+
         process = JProcesses.getProcess(3260);
         assertTrue(String.valueOf(8).equals(process.getPriority()));
 

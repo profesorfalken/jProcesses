@@ -28,8 +28,6 @@ import java.util.Map;
  * @author Javier Garcia Alonso
  */
 abstract class AbstractProcessesService implements ProcessesService {
-
-    protected String nameFilter = null;
     
     protected boolean fastMode = false;
 
@@ -99,15 +97,5 @@ abstract class AbstractProcessesService implements ProcessesService {
         }
 
         return infoList;
-    }
-
-    protected void filterByName(List<Map<String, String>> processesDataList) {
-        List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
-        for (final Map<String, String> process : processesDataList) {
-            if (!nameFilter.equals(process.get("proc_name"))) {
-                processesToRemove.add(process);
-            }
-        }
-        processesDataList.removeAll(processesToRemove);
     }
 }

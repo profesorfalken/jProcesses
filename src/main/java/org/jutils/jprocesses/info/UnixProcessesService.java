@@ -35,6 +35,8 @@ class UnixProcessesService extends AbstractProcessesService {
 
     private static final int PS_COLUMNS_SIZE = PS_COLUMNS.split(",").length;
     private static final int PS_FULL_COMMAND_SIZE = PS_FULL_COMMAND.split(",").length;
+    
+    private String nameFilter = null;
 
     @Override
     protected List<Map<String, String>> parseList(String rawData) {
@@ -167,5 +169,16 @@ class UnixProcessesService extends AbstractProcessesService {
                 process.put("command", commandsMap.get(process.get("pid")));
             }
         }
+    }
+    
+    
+    private void filterByName(List<Map<String, String>> processesDataList) {
+        List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
+        for (final Map<String, String> process : processesDataList) {
+            if (!nameFilter.equals(process.get("proc_name"))) {
+                processesToRemove.add(process);
+            }
+        }
+        processesDataList.removeAll(processesToRemove);
     }
 }
