@@ -47,17 +47,28 @@ class WindowsProcessesService extends AbstractProcessesService {
     private static final Map<String, String> keyMap;
 
     private static Map<String, String> processMap;
+    
+    private static final String NAME_PROPNAME = "Name";
+    private static final String PROCESSID_PROPNAME = "ProcessId";
+    private static final String USERMODETIME_PROPNAME = "UserModeTime";
+    private static final String PRIORITY_PROPNAME = "Priority";
+    private static final String VIRTUALSIZE_PROPNAME = "VirtualSize";
+    private static final String WORKINGSETSIZE_PROPNAME = "WorkingSetSize";
+    private static final String COMMANDLINE_PROPNAME = "CommandLine";
+    private static final String CREATIONDATE_PROPNAME = "CreationDate";
+    private static final String CAPTION_PROPNAME = "Caption";
 
     static {
         Map<String, String> tmpMap = new HashMap<String, String>();
-        tmpMap.put("Name", "proc_name");
-        tmpMap.put("ProcessId", "pid");
-        tmpMap.put("UserModeTime", "proc_time");
-        tmpMap.put("Priority", "priority");
-        tmpMap.put("VirtualSize", "virtual_memory");
-        tmpMap.put("WorkingSetSize", "physical_memory");
-        tmpMap.put("CommandLine", "command");
-        tmpMap.put("CreationDate", "start_time");
+        tmpMap.put(NAME_PROPNAME, "proc_name");
+        tmpMap.put(PROCESSID_PROPNAME, "pid");
+        tmpMap.put(USERMODETIME_PROPNAME, "proc_time");
+        tmpMap.put(PRIORITY_PROPNAME, "priority");
+        tmpMap.put(VIRTUALSIZE_PROPNAME, "virtual_memory");
+        tmpMap.put(WORKINGSETSIZE_PROPNAME, "physical_memory");
+        tmpMap.put(COMMANDLINE_PROPNAME, "command");
+        tmpMap.put(CREATIONDATE_PROPNAME, "start_time");
+        tmpMap.put(CREATIONDATE_PROPNAME, "start_time");
 
         keyMap = Collections.unmodifiableMap(tmpMap);
     }
@@ -82,7 +93,7 @@ class WindowsProcessesService extends AbstractProcessesService {
     }
 
     private void processLine(String dataLine, List<Map<String, String>> processesDataList) {
-        if (dataLine.startsWith("Caption")) {
+        if (dataLine.startsWith(CAPTION_PROPNAME)) {
             processMap = new HashMap<String, String>();
             processesDataList.add(processMap);
         }
@@ -93,12 +104,12 @@ class WindowsProcessesService extends AbstractProcessesService {
                 processMap.put(normalizeKey(dataStringInfo[0].trim()),
                         normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
 
-                if ("ProcessId".equals(dataStringInfo[0].trim())) {
+                if (PROCESSID_PROPNAME.equals(dataStringInfo[0].trim())) {
                     processMap.put("user", userData.get(dataStringInfo[1].trim()));
                     processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
                 }
 
-                if ("CreationDate".equals(dataStringInfo[0].trim())) {
+                if (CREATIONDATE_PROPNAME.equals(dataStringInfo[0].trim())) {
                     processMap.put("start_datetime",
                             ProcessesUtils.parseWindowsDateTimeToFullDate(dataStringInfo[1].trim()));
                 }
@@ -114,8 +125,10 @@ class WindowsProcessesService extends AbstractProcessesService {
 
         if (name != null) {
             return WMI4Java.get().VBSEngine()
-                    .properties(Arrays.asList("Caption", "ProcessId", "Name",
-                                    "UserModeTime", "CommandLine", "WorkingSetSize", "CreationDate", "VirtualSize", "Priority"))
+                    .properties(Arrays.asList(CAPTION_PROPNAME, PROCESSID_PROPNAME, NAME_PROPNAME,
+                                    USERMODETIME_PROPNAME, COMMANDLINE_PROPNAME, 
+                                    WORKINGSETSIZE_PROPNAME, CREATIONDATE_PROPNAME, 
+                                    VIRTUALSIZE_PROPNAME, PRIORITY_PROPNAME))
                     .filters(Collections.singletonList("Name like '%" + name + "%'"))
                     .getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
         }
@@ -148,17 +161,17 @@ class WindowsProcessesService extends AbstractProcessesService {
     }
 
     private static String normalizeValue(String origKey, String origValue) {
-        if ("UserModeTime".equals(origKey)) {
+        if (USERMODETIME_PROPNAME.equals(origKey)) {
             //100 nano to second - https://msdn.microsoft.com/en-us/library/windows/desktop/aa394372(v=vs.85).aspx
             long seconds = Long.parseLong(origValue) * 100 / 1000000 / 1000;
             return nomalizeTime(seconds);
         }
-        if ("VirtualSize".equals(origKey) || "WorkingSetSize".equals(origKey)) {
+        if (VIRTUALSIZE_PROPNAME.equals(origKey) || WORKINGSETSIZE_PROPNAME.equals(origKey)) {
             if (!(origValue.isEmpty())) {
                 return String.valueOf(Long.parseLong(origValue) / 1024);
             }
         }
-        if ("CreationDate".equals(origKey)) {
+        if (CREATIONDATE_PROPNAME.equals(origKey)) {
             return ProcessesUtils.parseWindowsDateTimeToSimpleTime(origValue);
         }
 
@@ -181,7 +194,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         for (final String dataLine : dataStringLines) {
 
             if (dataLine.trim().length() > 0) {
-                if (dataLine.startsWith("Caption")) {
+                if (dataLine.startsWith(CAPTION_PROPNAME)) {
                     if (pid != null && cpuUsage != null) {
                         cpuData.put(pid, cpuUsage);
                         pid = null;
