@@ -46,7 +46,7 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     private static final Map<String, String> keyMap;
 
-    private static Map<String, String> processMap;
+    private Map<String, String> processMap;
     
     private static final String NAME_PROPNAME = "Name";
     private static final String PROCESSID_PROPNAME = "ProcessId";
@@ -85,10 +85,6 @@ class WindowsProcessesService extends AbstractProcessesService {
             }
         }
 
-        /*
-         if (nameFilter != null) {
-         filterByName(processesDataList);
-         }*/
         return processesDataList;
     }
 
