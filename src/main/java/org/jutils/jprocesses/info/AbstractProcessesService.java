@@ -28,16 +28,27 @@ import java.util.Map;
  * @author Javier Garcia Alonso
  */
 abstract class AbstractProcessesService implements ProcessesService {
-
-    protected String nameFilter = null;
+    
+    protected boolean fastMode = false;
 
     @Override
     public List<ProcessInfo> getList() {
         return getList(null);
     }
-
+    
+    @Override
+    public List<ProcessInfo> getList(boolean fastMode) {
+        return getList(null, fastMode);
+    }
+    
     @Override
     public List<ProcessInfo> getList(String name) {
+        return getList(name, false);
+    }
+
+    @Override
+    public List<ProcessInfo> getList(String name, boolean fastMode) {
+        this.fastMode = fastMode;
         String rawData = getProcessesData(name);
 
         List<Map<String, String>> mapList = parseList(rawData);
@@ -78,20 +89,13 @@ abstract class AbstractProcessesService implements ProcessesService {
             info.setUser(map.get("user"));
             info.setVirtualMemory(map.get("virtual_memory"));
             info.setPriority(map.get("priority"));
+            
+            //Adds extra data
+            info.setExtraData(map);
 
             infoList.add(info);
         }
 
         return infoList;
-    }
-
-    protected void filterByName(List<Map<String, String>> processesDataList) {
-        List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
-        for (final Map<String, String> process : processesDataList) {
-            if (!nameFilter.equals(process.get("proc_name"))) {
-                processesToRemove.add(process);
-            }
-        }
-        processesDataList.removeAll(processesToRemove);
     }
 }

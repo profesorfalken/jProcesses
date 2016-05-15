@@ -35,6 +35,8 @@ class UnixProcessesService extends AbstractProcessesService {
 
     private static final int PS_COLUMNS_SIZE = PS_COLUMNS.split(",").length;
     private static final int PS_FULL_COMMAND_SIZE = PS_FULL_COMMAND.split(",").length;
+    
+    private String nameFilter = null;
 
     @Override
     protected List<Map<String, String>> parseList(String rawData) {
@@ -116,9 +118,15 @@ class UnixProcessesService extends AbstractProcessesService {
         }
         return response;
     }
-
+    
     @Override
     public ProcessInfo getProcess(int pid) {
+        return getProcess (pid, false);
+    }
+
+    @Override
+    public ProcessInfo getProcess(int pid, boolean fastMode) {
+        this.fastMode = fastMode;
         List<Map<String, String>> processList
                 = parseList(ProcessesUtils.executeCommand("ps",
                                 "-o", PS_COLUMNS, "-p", String.valueOf(pid)));
@@ -157,8 +165,20 @@ class UnixProcessesService extends AbstractProcessesService {
 
         for (final Map<String, String> process : processesDataList) {
             if (commandsMap.containsKey(process.get("pid"))) {
+                System.out.println("PID: " + process.get("pid") + " COMMAND: " + commandsMap.get(process.get("pid")));
                 process.put("command", commandsMap.get(process.get("pid")));
             }
         }
+    }
+    
+    
+    private void filterByName(List<Map<String, String>> processesDataList) {
+        List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
+        for (final Map<String, String> process : processesDataList) {
+            if (!nameFilter.equals(process.get("proc_name"))) {
+                processesToRemove.add(process);
+            }
+        }
+        processesDataList.removeAll(processesToRemove);
     }
 }

@@ -22,6 +22,7 @@ import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,7 @@ class WindowsProcessesService extends AbstractProcessesService {
     private static final String LINE_BREAK_REGEX = "\\r?\\n";
 
     private static final Map<String, String> keyMap;
-    
+
     private static Map<String, String> processMap;
 
     private final WMI4Java wmi4Java;
@@ -90,19 +91,17 @@ class WindowsProcessesService extends AbstractProcessesService {
             }
         }
 
-        if (nameFilter != null) {
-            filterByName(processesDataList);
-        }
-
+        /*
+         if (nameFilter != null) {
+         filterByName(processesDataList);
+         }*/
         return processesDataList;
     }
 
     private void processLine(String dataLine, List<Map<String, String>> processesDataList) {
         if (dataLine.startsWith("Caption")) {
-            if (processMap != null && processMap.size() > 0) {
-                processesDataList.add(processMap);
-            }
             processMap = new HashMap<String, String>();
+            processesDataList.add(processMap);
         }
 
         if (processMap != null) {
@@ -110,19 +109,31 @@ class WindowsProcessesService extends AbstractProcessesService {
             processMap.put(normalizeKey(dataStringInfo[0].trim()),
                     normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
 
-            if ("ProcessId".equals(dataStringInfo[0].trim())) {
-                processMap.put("user", userData.get(dataStringInfo[1].trim()));
-                processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
+                if ("ProcessId".equals(dataStringInfo[0].trim())) {
+                    processMap.put("user", userData.get(dataStringInfo[1].trim()));
+                    processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
+                }
+
+                if ("CreationDate".equals(dataStringInfo[0].trim())) {
+                    processMap.put("start_datetime",
+                            ProcessesUtils.parseWindowsDateTimeToFullDate(dataStringInfo[1].trim()));
+                }
             }
         }
     }
 
     @Override
     protected String getProcessesData(String name) {
-        fillExtraProcessData();
+        if (!fastMode) {
+            fillExtraProcessData();
+        }
 
         if (name != null) {
-            this.nameFilter = name;
+            return WMI4Java.get().VBSEngine()
+                    .properties(Arrays.asList("Caption", "ProcessId", "Name",
+                                    "UserModeTime", "CommandLine", "WorkingSetSize", "CreationDate", "VirtualSize", "Priority"))
+                    .filters(Collections.singletonList("Name like '%" + name + "%'"))
+                    .getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
         }
 
         return getWmi4Java().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
@@ -164,13 +175,7 @@ class WindowsProcessesService extends AbstractProcessesService {
             }
         }
         if ("CreationDate".equals(origKey)) {
-            if (!origValue.isEmpty()) {
-                String hour = origValue.substring(8, 10);
-                String minutes = origValue.substring(10, 12);
-                String seconds = origValue.substring(12, 14);
-
-                return hour + ":" + minutes + ":" + seconds;
-            }
+            return ProcessesUtils.parseWindowsDateTimeToSimpleTime(origValue);
         }
 
         return origValue;
@@ -190,7 +195,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         String pid = null;
         String cpuUsage = null;
         for (final String dataLine : dataStringLines) {
-            
+
             if (dataLine.trim().length() > 0) {
                 if (dataLine.startsWith("Caption")) {
                     if (pid != null && cpuUsage != null) {
@@ -200,7 +205,7 @@ class WindowsProcessesService extends AbstractProcessesService {
                     }
                     continue;
                 }
-                
+
                 if (pid == null) {
                     pid = checkAndGetDataInLine("IDProcess", dataLine);
                 }
@@ -247,6 +252,12 @@ class WindowsProcessesService extends AbstractProcessesService {
 
     @Override
     public ProcessInfo getProcess(int pid) {
+        return getProcess(pid, false);
+    }
+
+    @Override
+    public ProcessInfo getProcess(int pid, boolean fastMode) {
+        this.fastMode = fastMode;
         List<Map<String, String>> allProcesses = parseList(getProcessesData(null));
 
         for (final Map<String, String> process : allProcesses) {

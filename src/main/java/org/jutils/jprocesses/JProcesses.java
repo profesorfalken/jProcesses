@@ -29,13 +29,28 @@ import java.util.List;
  */
 public class JProcesses {
     
+    //This mode retrieves less information but faster
+    public static boolean fastMode = false;
+    
     private JProcesses() {
-    }
+    }    
     
     public static List<ProcessInfo> getProcessList() {                
         ProcessesService srv = ProcessesFactory.getService();
         
-        return srv.getList();
+        return srv.getList(fastMode);
+    }
+    
+    public static List<ProcessInfo> getProcessList(String name) {                
+        ProcessesService srv = ProcessesFactory.getService();
+        
+        return srv.getList(name, fastMode);
+    }
+    
+    public static ProcessInfo getProcess(int pid) {                
+        ProcessesService srv = ProcessesFactory.getService();
+        
+        return srv.getProcess(pid);
     }
     
     public static JProcessesResponse killProcess(int pid) {
@@ -48,18 +63,6 @@ public class JProcesses {
         ProcessesService srv = ProcessesFactory.getService();
 
         return srv.killProcessGracefully(pid);
-    }
-    
-    public static List<ProcessInfo> getProcessList(String name) {                
-        ProcessesService srv = ProcessesFactory.getService();
-        
-        return srv.getList(name);
-    }
-    
-    public static ProcessInfo getProcess(int pid) {                
-        ProcessesService srv = ProcessesFactory.getService();
-        
-        return srv.getProcess(pid);
     }
     
     public static JProcessesResponse changePriority(int pid, int newPriority) {
