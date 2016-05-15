@@ -12,6 +12,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -57,7 +58,11 @@ public class WindowsProcessesServiceTest {
 
     @Test
     public void testGetListWithName() {
-
+        when(wmi4Java.properties(anyList())).thenReturn(wmi4Java);
+        when(wmi4Java.filters(anyList())).thenReturn(wmi4Java);
+        when(wmi4Java.filters(anyList())).thenReturn(wmi4Java);
+        when(wmi4Java.getRawWMIObjectOutput(eq(WMIClass.WIN32_PROCESS))).thenReturn(WMI_PROCESS4 + WMI_PROCESS5);
+        when(wmi4Java.getRawWMIObjectOutput(eq(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS))).thenReturn(WMI_PROCESS4_PERF + WMI_PROCESS5_PERF);
         List<ProcessInfo> list = srv.getList("java.exe");
         assertEquals(2,list.size());
         assertTrue(list.contains(processInfo4));

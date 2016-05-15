@@ -73,7 +73,7 @@ class WindowsProcessesService extends AbstractProcessesService {
     }
 
     public WMI4Java getWmi4Java() {
-        if(wmi4Java == null){
+        if (wmi4Java == null) {
             return WMI4Java.get();
         }
         return wmi4Java;
@@ -91,10 +91,6 @@ class WindowsProcessesService extends AbstractProcessesService {
             }
         }
 
-        /*
-         if (nameFilter != null) {
-         filterByName(processesDataList);
-         }*/
         return processesDataList;
     }
 
@@ -109,15 +105,14 @@ class WindowsProcessesService extends AbstractProcessesService {
             processMap.put(normalizeKey(dataStringInfo[0].trim()),
                     normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
 
-                if ("ProcessId".equals(dataStringInfo[0].trim())) {
-                    processMap.put("user", userData.get(dataStringInfo[1].trim()));
-                    processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
-                }
+            if ("ProcessId".equals(dataStringInfo[0].trim())) {
+                processMap.put("user", userData.get(dataStringInfo[1].trim()));
+                processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
+            }
 
-                if ("CreationDate".equals(dataStringInfo[0].trim())) {
-                    processMap.put("start_datetime",
-                            ProcessesUtils.parseWindowsDateTimeToFullDate(dataStringInfo[1].trim()));
-                }
+            if ("CreationDate".equals(dataStringInfo[0].trim())) {
+                processMap.put("start_datetime",
+                        ProcessesUtils.parseWindowsDateTimeToFullDate(dataStringInfo[1].trim()));
             }
         }
     }
@@ -129,9 +124,8 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
 
         if (name != null) {
-            return WMI4Java.get().VBSEngine()
-                    .properties(Arrays.asList("Caption", "ProcessId", "Name",
-                                    "UserModeTime", "CommandLine", "WorkingSetSize", "CreationDate", "VirtualSize", "Priority"))
+            return getWmi4Java().VBSEngine().properties(Arrays.asList("Caption", "ProcessId", "Name",
+                    "UserModeTime", "CommandLine", "WorkingSetSize", "CreationDate", "VirtualSize", "Priority"))
                     .filters(Collections.singletonList("Name like '%" + name + "%'"))
                     .getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
         }
