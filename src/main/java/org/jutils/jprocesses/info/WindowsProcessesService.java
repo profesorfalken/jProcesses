@@ -47,6 +47,8 @@ class WindowsProcessesService extends AbstractProcessesService {
     
     private static Map<String, String> processMap;
 
+    private final WMI4Java wmi4Java;
+
     static {
         Map<String, String> tmpMap = new HashMap<String, String>();
         tmpMap.put("Name", "proc_name");
@@ -59,6 +61,21 @@ class WindowsProcessesService extends AbstractProcessesService {
         tmpMap.put("CreationDate", "start_time");
 
         keyMap = Collections.unmodifiableMap(tmpMap);
+    }
+
+    public WindowsProcessesService() {
+        this(null);
+    }
+
+    WindowsProcessesService(WMI4Java wmi4Java) {
+        this.wmi4Java = wmi4Java;
+    }
+
+    public WMI4Java getWmi4Java() {
+        if(wmi4Java == null){
+            return WMI4Java.get();
+        }
+        return wmi4Java;
     }
 
     @Override
@@ -90,14 +107,12 @@ class WindowsProcessesService extends AbstractProcessesService {
 
         if (processMap != null) {
             String[] dataStringInfo = dataLine.split(":", 2);
-            if (dataStringInfo.length == 2) {
-                processMap.put(normalizeKey(dataStringInfo[0].trim()),
-                        normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
+            processMap.put(normalizeKey(dataStringInfo[0].trim()),
+                    normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
 
-                if ("ProcessId".equals(dataStringInfo[0].trim())) {
-                    processMap.put("user", userData.get(dataStringInfo[1].trim()));
-                    processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
-                }
+            if ("ProcessId".equals(dataStringInfo[0].trim())) {
+                processMap.put("user", userData.get(dataStringInfo[1].trim()));
+                processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
             }
         }
     }
@@ -110,7 +125,7 @@ class WindowsProcessesService extends AbstractProcessesService {
             this.nameFilter = name;
         }
 
-        return WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
+        return getWmi4Java().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
     }
 
     @Override
@@ -169,7 +184,7 @@ class WindowsProcessesService extends AbstractProcessesService {
     }
 
     private void fillExtraProcessData() {
-        String perfData = WMI4Java.get().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);
+        String perfData = getWmi4Java().VBSEngine().getRawWMIObjectOutput(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS);
 
         String[] dataStringLines = perfData.split(LINE_BREAK_REGEX);
         String pid = null;

@@ -33,6 +33,22 @@ public class ProcessInfo {
     private String priority;
     private String command;
 
+    public ProcessInfo() {
+    }
+
+    public ProcessInfo(String pid, String time, String name, String user, String virtualMemory, String physicalMemory, String cpuUsage, String startTime, String priority, String command) {
+        this.pid = pid;
+        this.time = time;
+        this.name = name;
+        this.user = user;
+        this.virtualMemory = virtualMemory;
+        this.physicalMemory = physicalMemory;
+        this.cpuUsage = cpuUsage;
+        this.startTime = startTime;
+        this.priority = priority;
+        this.command = command;
+    }
+
     public String getPid() {
         return pid;
     }
@@ -111,6 +127,43 @@ public class ProcessInfo {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ProcessInfo that = (ProcessInfo) o;
+
+        if (pid != null ? !pid.equals(that.pid) : that.pid != null) return false;
+        if (time != null ? !time.equals(that.time) : that.time != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+//        if (user != null ? !user.equals(that.user) : that.user != null) return false;
+//        if (virtualMemory != null ? !virtualMemory.equals(that.virtualMemory) : that.virtualMemory != null)
+//            return false;
+//        if (physicalMemory != null ? !physicalMemory.equals(that.physicalMemory) : that.physicalMemory != null)
+//            return false;
+//        if (cpuUsage != null ? !cpuUsage.equals(that.cpuUsage) : that.cpuUsage != null) return false;
+        if (startTime != null ? !startTime.equals(that.startTime) : that.startTime != null) return false;
+        if (priority != null ? !priority.equals(that.priority) : that.priority != null) return false;
+        return command != null ? command.equals(that.command) : that.command == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = pid != null ? pid.hashCode() : 0;
+        result = 31 * result + (time != null ? time.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+//        result = 31 * result + (user != null ? user.hashCode() : 0)   //TODO: return this to equals and hashcode after getProcessesOwner refactoring
+//        result = 31 * result + (virtualMemory != null ? virtualMemory.hashCode() : 0);
+//        result = 31 * result + (physicalMemory != null ? physicalMemory.hashCode() : 0);
+//        result = 31 * result + (cpuUsage != null ? cpuUsage.hashCode() : 0);
+        result = 31 * result + (startTime != null ? startTime.hashCode() : 0);
+        result = 31 * result + (priority != null ? priority.hashCode() : 0);
+        result = 31 * result + (command != null ? command.hashCode() : 0);
+        return result;
     }
 
     @Override
