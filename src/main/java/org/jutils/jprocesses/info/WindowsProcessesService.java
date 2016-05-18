@@ -164,7 +164,7 @@ class WindowsProcessesService extends AbstractProcessesService {
             return nomalizeTime(seconds);
         }
         if ("VirtualSize".equals(origKey) || "WorkingSetSize".equals(origKey)) {
-            if (!(origValue.isEmpty())) {
+            if (origValue != null && origValue.length() > 0) {
                 return String.valueOf(Long.parseLong(origValue) / 1024);
             }
         }
@@ -232,11 +232,10 @@ class WindowsProcessesService extends AbstractProcessesService {
         return null;
     }
 
-    @Override
     public JProcessesResponse changePriority(int pid, int priority) {
         JProcessesResponse response = new JProcessesResponse();
         String message = VBScriptHelper.changePriority(pid, priority);
-        if (message.isEmpty()) {
+        if (message == null || message.length() == 0) {
             response.setSuccess(true);
         } else {
             response.setMessage(message);
@@ -244,12 +243,10 @@ class WindowsProcessesService extends AbstractProcessesService {
         return response;
     }
 
-    @Override
     public ProcessInfo getProcess(int pid) {
         return getProcess(pid, false);
     }
 
-    @Override
     public ProcessInfo getProcess(int pid, boolean fastMode) {
         this.fastMode = fastMode;
         List<Map<String, String>> allProcesses = parseList(getProcessesData(null));
