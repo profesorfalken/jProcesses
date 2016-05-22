@@ -117,7 +117,7 @@
         <dependency>
             <groupId>com.profesorfalken</groupId>
             <artifactId>WMI4Java</artifactId>
-            <version>1.4</version>
+            <version>1.4.1</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>

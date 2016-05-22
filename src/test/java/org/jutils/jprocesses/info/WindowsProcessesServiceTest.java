@@ -68,6 +68,7 @@ public class WindowsProcessesServiceTest {
             when(wmi4Java.getRawWMIObjectOutput(eq(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS))).thenReturn(WMI_PROCESS4_PERF + WMI_PROCESS5_PERF);
             List<ProcessInfo> list = srv.getList("java.exe");
             assertEquals(2, list.size());
+            //FIXME: disable because the pid is different
             assertTrue(list.contains(processInfo4));
             assertTrue(list.contains(processInfo5));
         }
