@@ -5,6 +5,7 @@ import com.profesorfalken.wmi4java.WMIClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.jutils.jprocesses.model.ProcessInfo;
+import org.jutils.jprocesses.util.OSDetector;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -12,7 +13,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import org.jutils.jprocesses.util.OSDetector;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -68,9 +68,8 @@ public class WindowsProcessesServiceTest {
             when(wmi4Java.getRawWMIObjectOutput(eq(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS))).thenReturn(WMI_PROCESS4_PERF + WMI_PROCESS5_PERF);
             List<ProcessInfo> list = srv.getList("java.exe");
             assertEquals(2, list.size());
-            //FIXME: disable because the pid is different
-            /*assertTrue(list.contains(processInfo4));
-            assertTrue(list.contains(processInfo5));*/
+            assertTrue(list.contains(processInfo4));
+            assertTrue(list.contains(processInfo5));
         }
     }
 
