@@ -42,7 +42,7 @@ class UnixProcessesService extends AbstractProcessesService {
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
         String[] dataStringLines = rawData.split("\\r?\\n");
-
+        
         int index;
         for (final String dataLine : dataStringLines) {
             String line = dataLine.trim();

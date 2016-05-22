@@ -24,50 +24,64 @@ import java.util.List;
 
 /**
  * Static class that gives access to Processes details.
- * 
+ *
  * @author Javier Garcia Alonso
  */
 public class JProcesses {
-    
+
     //This mode retrieves less information but faster
-    public static boolean fastMode = false;
-    
+    private boolean fastMode = false;
+
     private JProcesses() {
-    }    
-    
-    public static List<ProcessInfo> getProcessList() {                
-        ProcessesService srv = ProcessesFactory.getService();
-        
-        return srv.getList(fastMode);
     }
-    
-    public static List<ProcessInfo> getProcessList(String name) {                
-        ProcessesService srv = ProcessesFactory.getService();
-        
-        return srv.getList(name, fastMode);
+
+    public static JProcesses get() {
+        return new JProcesses();
     }
-    
-    public static ProcessInfo getProcess(int pid) {                
-        ProcessesService srv = ProcessesFactory.getService();
-        
-        return srv.getProcess(pid);
+
+    public JProcesses fastMode() {
+        this.fastMode = true;
+        return this;
     }
-    
+
+    public JProcesses fastMode(boolean enabled) {
+        this.fastMode = enabled;
+        return this;
+    }
+
+    public List<ProcessInfo> listProcesses() {
+        return getService().getList(fastMode);
+    }
+
+    public List<ProcessInfo> listProcesses(String name) {
+        return getService().getList(name, fastMode);
+    }
+
+    public static List<ProcessInfo> getProcessList() {
+        return getService().getList();
+    }
+
+    public static List<ProcessInfo> getProcessList(String name) {
+        return getService().getList(name);
+    }
+
+    public static ProcessInfo getProcess(int pid) {
+        return getService().getProcess(pid);
+    }
+
     public static JProcessesResponse killProcess(int pid) {
-         ProcessesService srv = ProcessesFactory.getService();
-         
-         return srv.killProcess(pid);
+        return getService().killProcess(pid);
     }
 
-    public static JProcessesResponse killProcessGracefully (int pid) {
-        ProcessesService srv = ProcessesFactory.getService();
-
-        return srv.killProcessGracefully(pid);
+    public static JProcessesResponse killProcessGracefully(int pid) {
+        return getService().killProcessGracefully(pid);
     }
-    
+
     public static JProcessesResponse changePriority(int pid, int newPriority) {
-         ProcessesService srv = ProcessesFactory.getService();
-        
-        return srv.changePriority(pid, newPriority);
+        return getService().changePriority(pid, newPriority);
+    }
+
+    private static ProcessesService getService() {
+        return ProcessesFactory.getService();
     }
 }

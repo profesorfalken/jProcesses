@@ -43,8 +43,7 @@ public class JProcessesTest {
     @Test
     public void testGetProcessList() {
         System.out.println("===============Testing getProcessList============");
-        JProcesses.fastMode = true;
-        List<ProcessInfo> processesList = JProcesses.getProcessList();
+        List<ProcessInfo> processesList = JProcesses.get().fastMode().listProcesses();
 
         assertTrue(processesList != null && processesList.size() > 0);
 
