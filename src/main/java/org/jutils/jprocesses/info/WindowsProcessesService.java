@@ -47,7 +47,7 @@ class WindowsProcessesService extends AbstractProcessesService {
     private static final Map<String, String> keyMap;
 
     private Map<String, String> processMap;
-    
+
     private static final String NAME_PROPNAME = "Name";
     private static final String PROCESSID_PROPNAME = "ProcessId";
     private static final String USERMODETIME_PROPNAME = "UserModeTime";
@@ -116,15 +116,14 @@ class WindowsProcessesService extends AbstractProcessesService {
             processMap.put(normalizeKey(dataStringInfo[0].trim()),
                     normalizeValue(dataStringInfo[0].trim(), dataStringInfo[1].trim()));
 
-                if (PROCESSID_PROPNAME.equals(dataStringInfo[0].trim())) {
-                    processMap.put("user", userData.get(dataStringInfo[1].trim()));
-                    processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
-                }
+            if (PROCESSID_PROPNAME.equals(dataStringInfo[0].trim())) {
+                processMap.put("user", userData.get(dataStringInfo[1].trim()));
+                processMap.put("cpu_usage", cpuData.get(dataStringInfo[1].trim()));
+            }
 
-                if (CREATIONDATE_PROPNAME.equals(dataStringInfo[0].trim())) {
-                    processMap.put("start_datetime",
-                            ProcessesUtils.parseWindowsDateTimeToFullDate(dataStringInfo[1].trim()));
-                }
+            if (CREATIONDATE_PROPNAME.equals(dataStringInfo[0].trim())) {
+                processMap.put("start_datetime",
+                        ProcessesUtils.parseWindowsDateTimeToFullDate(dataStringInfo[1].trim()));
             }
         }
     }
@@ -138,8 +137,8 @@ class WindowsProcessesService extends AbstractProcessesService {
         if (name != null) {
             return WMI4Java.get().VBSEngine()
                     .properties(Arrays.asList(CAPTION_PROPNAME, PROCESSID_PROPNAME, NAME_PROPNAME,
-                                    USERMODETIME_PROPNAME, COMMANDLINE_PROPNAME, 
-                                    WORKINGSETSIZE_PROPNAME, CREATIONDATE_PROPNAME, 
+                                    USERMODETIME_PROPNAME, COMMANDLINE_PROPNAME,
+                                    WORKINGSETSIZE_PROPNAME, CREATIONDATE_PROPNAME,
                                     VIRTUALSIZE_PROPNAME, PRIORITY_PROPNAME))
                     .filters(Collections.singletonList("Name like '%" + name + "%'"))
                     .getRawWMIObjectOutput(WMIClass.WIN32_PROCESS);
