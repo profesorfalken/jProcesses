@@ -135,7 +135,7 @@ class WindowsProcessesService extends AbstractProcessesService {
         }
 
         if (name != null) {
-            return WMI4Java.get().VBSEngine()
+            return getWmi4Java().VBSEngine()
                     .properties(Arrays.asList(CAPTION_PROPNAME, PROCESSID_PROPNAME, NAME_PROPNAME,
                                     USERMODETIME_PROPNAME, COMMANDLINE_PROPNAME,
                                     WORKINGSETSIZE_PROPNAME, CREATIONDATE_PROPNAME,
