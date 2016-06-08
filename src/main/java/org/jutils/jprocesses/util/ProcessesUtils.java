@@ -64,7 +64,8 @@ public class ProcessesUtils {
             }
 
             //Fix for possible hanging. Flush output before start reading
-            process.getOutputStream().flush();
+            System.out.flush();
+            //process.getOutputStream().flush();
 
             String line;
             while ((line = processOutput.readLine()) != null) {
