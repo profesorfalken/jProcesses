@@ -15,7 +15,12 @@
  */
 package org.jutils.jprocesses.info;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
@@ -30,7 +35,7 @@ import org.jutils.jprocesses.util.ProcessesUtils;
 class UnixProcessesService extends AbstractProcessesService {
 
     //Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
-    private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,start,cputime,nice,ucomm";
+    private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,start,lstart,cputime,nice,ucomm";
     private static final String PS_FULL_COMMAND = "pid,command";
 
     private static final int PS_COLUMNS_SIZE = PS_COLUMNS.split(",").length;
@@ -51,7 +56,7 @@ class UnixProcessesService extends AbstractProcessesService {
             } else {
                 // LinkedHashMap keeps the insertion order, thus easier to debug
                 Map<String, String> element = new LinkedHashMap<String, String>();
-                String[] elements = line.split("\\s+", PS_COLUMNS_SIZE);
+                String[] elements = line.split("\\s+", PS_COLUMNS_SIZE + 5);
                 index = 0;
                 element.put("pid", elements[index++]);
                 element.put("user", elements[index++]);
@@ -59,9 +64,14 @@ class UnixProcessesService extends AbstractProcessesService {
                 element.put("physical_memory", elements[index++]);
                 element.put("cpu_usage", elements[index++]);
                 element.put("start_time", elements[index++]);
+                element.put("start_datetime", 
+                        ProcessesUtils.parseUnixLongTimeToFullDate(elements[index++] 
+                                + " " + elements[index++] + " " 
+                                + elements[index++] + " " 
+                                + elements[index++]+ " " + elements[index++]));
                 element.put("proc_time", elements[index++]);
                 element.put("priority", elements[index++]);
-                element.put("proc_name", elements[index++]);
+                element.put("proc_name", elements[index++]);                
                 // first init full command by content of proc_name
                 element.put("command", elements[index - 1]);
 
@@ -159,13 +169,14 @@ class UnixProcessesService extends AbstractProcessesService {
         for (final String dataLine : dataStringLines) {
             if (!(dataLine.trim().startsWith("PID"))) {
                 String[] elements = dataLine.trim().split("\\s+", PS_FULL_COMMAND_SIZE);
-                commandsMap.put(elements[0], elements[1]);
+                if (elements.length == PS_FULL_COMMAND_SIZE) {
+                    commandsMap.put(elements[0], elements[1]);
+                }
             }
         }
 
         for (final Map<String, String> process : processesDataList) {
             if (commandsMap.containsKey(process.get("pid"))) {
-                System.out.println("PID: " + process.get("pid") + " COMMAND: " + commandsMap.get(process.get("pid")));
                 process.put("command", commandsMap.get(process.get("pid")));
             }
         }
@@ -180,5 +191,5 @@ class UnixProcessesService extends AbstractProcessesService {
             }
         }
         processesDataList.removeAll(processesToRemove);
-    }
+    }    
 }

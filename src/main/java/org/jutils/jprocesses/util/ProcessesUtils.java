@@ -18,6 +18,10 @@ package org.jutils.jprocesses.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -64,11 +68,10 @@ public class ProcessesUtils {
             }
 
             //Fix for possible hanging. Flush output before start reading
-            System.out.flush();
-            //process.getOutputStream().flush();
+            process.getOutputStream().flush();            
 
             String line;
-            while ((line = processOutput.readLine()) != null) {
+            while (processOutput.ready() && (line = processOutput.readLine()) != null) {
                 if (!line.isEmpty()) {
                     commandOutput.append(line).append(CRLF);
                 }
@@ -135,7 +138,7 @@ public class ProcessesUtils {
      * <a href="https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx">
      * https://msdn.microsoft.com/fr-fr/library/windows/desktop/aa387237(v=vs.85).aspx</a>
      *
-     * @return string with formatted time (hh:mm:ss)
+     * @return string with formatted time (mm/dd/yyyy HH:mm:ss)
      */
     public static String parseWindowsDateTimeToFullDate(String dateTime) {
         String returnedDate = dateTime;
@@ -151,5 +154,25 @@ public class ProcessesUtils {
                     + minutes + ":" + seconds;
         }
         return returnedDate;
+    }
+    
+    /**
+     * Parse Unix long date format(ex: Fri Jun 10 04:35:36 2016) to format MM/dd/yyyy HH:mm:ss
+     *
+     * @param longFormatDate original datetime format
+     *
+     * @return string with formatted date and time (mm/dd/yyyy HH:mm:ss)
+     */
+    public static String parseUnixLongTimeToFullDate(String longFormatDate) {        
+        DateFormat originalFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
+        DateFormat targetFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        String returnedDate = null;        
+        try {
+            returnedDate = targetFormat.format(originalFormat.parse(longFormatDate));
+        } catch (ParseException ex) {
+            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return returnedDate;      
     }
 }
