@@ -66,3 +66,9 @@ Windows:
 ## More info ##
 
 Webpage: http://www.jprocesses.org
+
+
+## Special thanks ##
+
+@jkuharev: for his help to make jProcess work on Mac 
+@Gobliins: for fixing executeCommand hang with lots of process using ProcessBuilder
