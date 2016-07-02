@@ -42,8 +42,10 @@ public class ProcessesUtils {
         String commandOutput = null;
 
         try {
-            Process process = Runtime.getRuntime().exec(command);
-            commandOutput = readData(process);
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.redirectErrorStream(true); // redirect error stream to output stream
+
+            commandOutput = readData(processBuilder.start());
         } catch (IOException ex) {
             Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -54,24 +56,12 @@ public class ProcessesUtils {
     private static String readData(Process process) {
         StringBuilder commandOutput = new StringBuilder();
         BufferedReader processOutput = null;
-        try {
-            process.waitFor();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
-        }
 
-        try {
-            if (process.exitValue() == 0) {
-                processOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            } else {
-                processOutput = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            }
-
-            //Fix for possible hanging. Flush output before start reading
-            process.getOutputStream().flush();            
-
+        try {          
+             processOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            
             String line;
-            while (processOutput.ready() && (line = processOutput.readLine()) != null) {
+            while ((line = processOutput.readLine()) != null) {
                 if (!line.isEmpty()) {
                     commandOutput.append(line).append(CRLF);
                 }
@@ -155,24 +145,25 @@ public class ProcessesUtils {
         }
         return returnedDate;
     }
-    
+
     /**
-     * Parse Unix long date format(ex: Fri Jun 10 04:35:36 2016) to format MM/dd/yyyy HH:mm:ss
+     * Parse Unix long date format(ex: Fri Jun 10 04:35:36 2016) to format
+     * MM/dd/yyyy HH:mm:ss
      *
      * @param longFormatDate original datetime format
      *
      * @return string with formatted date and time (mm/dd/yyyy HH:mm:ss)
      */
-    public static String parseUnixLongTimeToFullDate(String longFormatDate) {        
+    public static String parseUnixLongTimeToFullDate(String longFormatDate) {
         DateFormat originalFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
         DateFormat targetFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-        String returnedDate = null;        
+        String returnedDate = null;
         try {
             returnedDate = targetFormat.format(originalFormat.parse(longFormatDate));
         } catch (ParseException ex) {
             Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        return returnedDate;      
+
+        return returnedDate;
     }
 }
