@@ -161,6 +161,14 @@ public class ProcessesUtils {
         try {
             returnedDate = targetFormat.format(originalFormat.parse(longFormatDate));
         } catch (ParseException ex) {
+            //If not working, try without the year: 
+            originalFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss", Locale.ENGLISH);
+            try {
+                returnedDate = targetFormat.format(originalFormat.parse(longFormatDate));
+            } catch (ParseException ex1) {
+                Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            
             Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
 
