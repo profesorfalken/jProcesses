@@ -35,7 +35,7 @@ import org.jutils.jprocesses.util.ProcessesUtils;
 class UnixProcessesService extends AbstractProcessesService {
 
     //Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
-    private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,start,lstart,cputime,nice,ucomm";
+    private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,lstart,cputime,nice,ucomm";
     private static final String PS_FULL_COMMAND = "pid,command";
 
     private static final int PS_COLUMNS_SIZE = PS_COLUMNS.split(",").length;
@@ -63,12 +63,14 @@ class UnixProcessesService extends AbstractProcessesService {
                 element.put("virtual_memory", elements[index++]);
                 element.put("physical_memory", elements[index++]);
                 element.put("cpu_usage", elements[index++]);
-                element.put("start_time", elements[index++]);
-                element.put("start_datetime", 
-                        ProcessesUtils.parseUnixLongTimeToFullDate(elements[index++] 
-                                + " " + elements[index++] + " " 
+                String longDate = elements[index++] + " " 
                                 + elements[index++] + " " 
-                                + elements[index++]+ " " + elements[index++]));
+                                + elements[index++] + " " 
+                                + elements[index++]+ " " 
+                                + elements[index++];                
+                element.put("start_time", elements[index - 2]);
+                element.put("start_datetime", 
+                        ProcessesUtils.parseUnixLongTimeToFullDate(longDate));
                 element.put("proc_time", elements[index++]);
                 element.put("priority", elements[index++]);
                 element.put("proc_name", elements[index++]);                
