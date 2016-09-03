@@ -77,11 +77,13 @@ public class JProcesses {
     /**
      * Return the list of processes running in the system.<br>
      * For each process some information is retrieved:
+     * <ul>
      * <li>PID</li>
      * <li>Name</li>
      * <li>Used memory</li>
      * <li>Date/time</li>
      * <li>Priority</li>
+     * </ul>
      * [...]<p>
      * 
      * For further details see {@link ProcessInfo} 
@@ -95,11 +97,13 @@ public class JProcesses {
     /**
      * Return the list of processes that match with the provided name.<br>
      * For each process some information is retrieved:
+     * <ul>
      * <li>PID</li>
      * <li>Name</li>
      * <li>Used memory</li>
      * <li>Date/time</li>
      * <li>Priority</li>
+     * </ul>
      * [...]<p>
      * 
      * For further details see {@link ProcessInfo} 
@@ -115,11 +119,13 @@ public class JProcesses {
      * Convenience static method that returns the list of processes 
      * that match with the provided name.<br>
      * For each process some information is retrieved:
+     * <ul>
      * <li>PID</li>
      * <li>Name</li>
      * <li>Used memory</li>
      * <li>Date/time</li>
      * <li>Priority</li>
+     * </ul>
      * [...]<p>
      * 
      * For further details see {@link ProcessInfo} 
@@ -134,11 +140,13 @@ public class JProcesses {
      * Convenience static method that returns the list of processes 
      * that match with the provided name.<br>
      * For each process some information is retrieved:
+     * <ul>
      * <li>PID</li>
      * <li>Name</li>
      * <li>Used memory</li>
      * <li>Date/time</li>
      * <li>Priority</li>
+     * </ul>
      * [...]<p>
      * 
      * For further details see {@link ProcessInfo} 
@@ -153,16 +161,18 @@ public class JProcesses {
     /**
      * Static method that returns the information of a process<br> 
      * Some information is retrieved:
+     * <ul>
      * <li>PID</li>
      * <li>Name</li>
      * <li>Used memory</li>
      * <li>Date/time</li>
      * <li>Priority</li>
+     * </ul>
      * [...]<p>
      * 
      * For further details see {@link ProcessInfo} 
      * 
-     * @param name The pid of the searched process
+     * @param pid The PID of the searched process
      * @return {@link JProcesses} object with the information of the process
      */
     public static ProcessInfo getProcess(int pid) {
