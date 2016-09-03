@@ -31,22 +31,18 @@ abstract class AbstractProcessesService implements ProcessesService {
     
     protected boolean fastMode = false;
 
-    @Override
     public List<ProcessInfo> getList() {
         return getList(null);
     }
     
-    @Override
     public List<ProcessInfo> getList(boolean fastMode) {
         return getList(null, fastMode);
     }
     
-    @Override
     public List<ProcessInfo> getList(String name) {
         return getList(name, false);
     }
 
-    @Override
     public List<ProcessInfo> getList(String name, boolean fastMode) {
         this.fastMode = fastMode;
         String rawData = getProcessesData(name);
@@ -56,12 +52,10 @@ abstract class AbstractProcessesService implements ProcessesService {
         return buildInfoFromMap(mapList);
     }
 
-    @Override
     public JProcessesResponse killProcess(int pid) {
         return kill(pid);
     }
 
-    @Override
     public JProcessesResponse killProcessGracefully(int pid) {
         return killGracefully(pid);
     }

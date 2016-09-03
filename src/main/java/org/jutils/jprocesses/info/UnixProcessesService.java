@@ -15,12 +15,11 @@
  */
 package org.jutils.jprocesses.info;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
@@ -121,7 +120,6 @@ class UnixProcessesService extends AbstractProcessesService {
         return response;
     }
 
-    @Override
     public JProcessesResponse changePriority(int pid, int priority) {
         JProcessesResponse response = new JProcessesResponse();
         if (ProcessesUtils.executeCommandAndGetCode("renice", String.valueOf(priority),
@@ -131,12 +129,10 @@ class UnixProcessesService extends AbstractProcessesService {
         return response;
     }
     
-    @Override
     public ProcessInfo getProcess(int pid) {
         return getProcess (pid, false);
     }
 
-    @Override
     public ProcessInfo getProcess(int pid, boolean fastMode) {
         this.fastMode = fastMode;
         List<Map<String, String>> processList
