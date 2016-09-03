@@ -7,19 +7,19 @@ Get crossplatform processes details with Java
 
 ## Installation ##
 
-To install jProcesses you can add the dependecy to your software project management tool: http://mvnrepository.com/artifact/org.jprocesses/jProcesses/1.6.1
+To install jProcesses you can add the dependecy to your software project management tool: http://mvnrepository.com/artifact/org.jprocesses/jProcesses/1.6.2
 
 For example, for Maven you have just to add to your pom.xml: 
 
       <dependency>
 	         <groupId>org.jprocesses</groupId>
 	         <artifactId>jProcesses</artifactId>
-         	<version>1.6.1</version>
+         	<version>1.6.2</version>
       </dependency>
 
 
 Instead, you can direct download the JAR file and add it to your classpath. 
-http://central.maven.org/maven2/org/jprocesses/jProcesses/1.6/jProcesses-1.6.1.jar
+http://central.maven.org/maven2/org/jprocesses/jProcesses/1.6.2/jProcesses-1.6.2.jar
 
 The only dependency you will need to add to the classpath is [WMI4Java](https://repo1.maven.org/maven2/com/profesorfalken/WMI4Java). You can download de JAR file [here](https://repo1.maven.org/maven2/com/profesorfalken/WMI4Java/1.4.2/WMI4Java-1.4.2.jar). 
 
