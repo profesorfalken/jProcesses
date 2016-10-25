@@ -38,6 +38,7 @@ public class ProcessesUtils {
 
     private static final String CRLF = "\r\n";
     private static String customDateFormat;
+    private static Locale customLocale;
   
 
     //Hide constructor
@@ -162,14 +163,20 @@ public class ProcessesUtils {
      */
     public static String parseUnixLongTimeToFullDate(String longFormatDate) throws ParseException {
         DateFormat targetFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-        List<String> formatsToTry = Arrays.asList("MMM dd HH:mm:ss yyyy", "dd MMM HH:mm:ss yyyy");
-        if (getCustomDateFormat() != null) {
-            List<String> newList = new ArrayList<String>();
-            newList.add(customDateFormat);
-            newList.addAll(formatsToTry);
-            formatsToTry = newList;
+        List<String> formatsToTry = new ArrayList<String>();
+        formatsToTry.addAll(Arrays.asList("MMM dd HH:mm:ss yyyy", "dd MMM HH:mm:ss yyyy"));
+        List<Locale> localesToTry = new ArrayList<Locale>();
+        localesToTry.addAll(Arrays.asList(Locale.getDefault(), 
+            Locale.getDefault(Locale.Category.FORMAT), 
+            Locale.ENGLISH)
+        );
+        if (getCustomDateFormat() != null) {           
+            formatsToTry.add(0, getCustomDateFormat());
         }
-        List<Locale> localesToTry = Arrays.asList(Locale.getDefault(), Locale.getDefault(Locale.Category.FORMAT), Locale.ENGLISH);
+        if (getCustomLocale() != null) {
+            localesToTry.add(0, getCustomLocale());
+        }
+      
         ParseException lastException = null;
         for (Locale locale : localesToTry) {
             for (String format : formatsToTry) {
@@ -197,5 +204,17 @@ public class ProcessesUtils {
      */
     public static void setCustomDateFormat(String dateFormat) {
         customDateFormat = dateFormat;
-    }   
+    }
+
+    public static Locale getCustomLocale() {
+      return customLocale;
+    }
+
+    /**
+     * Sets a custom locale if the defaults won't parse your ps output
+     * @param customLocale the Locale object to use
+     */
+    public static void setCustomLocale(Locale customLocale) {
+        ProcessesUtils.customLocale = customLocale;
+      }
 }
