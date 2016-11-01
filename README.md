@@ -76,3 +76,5 @@ Webpage: http://www.jprocesses.org
 @jkuharev: for his help to make jProcess work on Mac 
 
 @Gobliins: for fixing executeCommand hang with lots of process using ProcessBuilder
+
+@janhoy: for his contribution that fix long date parsing with locales different from english (Norwegian in his case)
