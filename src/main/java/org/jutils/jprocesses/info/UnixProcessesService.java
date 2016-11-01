@@ -15,6 +15,7 @@
  */
 package org.jutils.jprocesses.info;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -62,14 +63,19 @@ class UnixProcessesService extends AbstractProcessesService {
                 element.put("virtual_memory", elements[index++]);
                 element.put("physical_memory", elements[index++]);
                 element.put("cpu_usage", elements[index++]);
+                index++; // Skip weekday
                 String longDate = elements[index++] + " " 
-                                + elements[index++] + " " 
                                 + elements[index++] + " " 
                                 + elements[index++]+ " " 
                                 + elements[index++];                
                 element.put("start_time", elements[index - 2]);
-                element.put("start_datetime", 
-                        ProcessesUtils.parseUnixLongTimeToFullDate(longDate));
+                try {
+                    element.put("start_datetime", 
+                            ProcessesUtils.parseUnixLongTimeToFullDate(longDate));
+                } catch (ParseException e) {
+                    element.put("start_datetime", "01/01/2000 00:00:00");
+                    System.err.println("Failed formatting date from ps: " + longDate + ", using \"01/01/2000 00:00:00\"");
+                }
                 element.put("proc_time", elements[index++]);
                 element.put("priority", elements[index++]);
                 element.put("proc_name", elements[index++]);                
