@@ -196,7 +196,7 @@ public class ProcessesUtils {
     }
   
     /**
-     * Custom date format to be used when parsing date string in "ps" output<br/>
+     * Custom date format to be used when parsing date string in "ps" output<br>
      * NOTE: We assume 5 space separated fields for date, where we pass the last 4 to the parser, e.g.
      * for input text <code>søn 23 okt 08:30:00 2016</code> we would send <code>23 okt 08:30:00 2016</code>
      * to the parser, so a pattern <code>dd MMM HH:mm:ss yyyy</code> would work.

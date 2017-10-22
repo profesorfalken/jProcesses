@@ -210,6 +210,7 @@ public class JProcesses {
      * 
      * For further details see {@link ProcessInfo} 
      * 
+     * @param pid the PID of the process tochange priority
      * @param newPriority integer with the new version. For windows you can use the helper constants at {@link WindowsPriority}
      * @return {@link JProcessesResponse} response object that contains information about the result of the operation
      */
