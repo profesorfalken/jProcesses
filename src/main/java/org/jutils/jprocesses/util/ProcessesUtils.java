@@ -54,7 +54,9 @@ public class ProcessesUtils {
 
             commandOutput = readData(processBuilder.start());
         } catch (IOException ex) {
-            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+            commandOutput = "";
+            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, "Error executing command", ex);
+            ex.printStackTrace();
         }
 
         return commandOutput;
@@ -74,14 +76,14 @@ public class ProcessesUtils {
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, "Error reading data", ex);
         } finally {
             try {
                 if (processOutput != null) {
                     processOutput.close();
                 }
             } catch (IOException ioe) {
-                Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ioe);
+                Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, "Error closing reader", ioe);
             }
         }
 
