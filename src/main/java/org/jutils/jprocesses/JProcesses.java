@@ -178,6 +178,28 @@ public class JProcesses {
     public static ProcessInfo getProcess(int pid) {
         return getService().getProcess(pid);
     }
+    
+    /**
+     * Static method that returns the information of a process<br> 
+     * Some information is retrieved:
+     * <ul>
+     * <li>PID</li>
+     * <li>Name</li>
+     * <li>Used memory</li>
+     * <li>Date/time</li>
+     * <li>Priority</li>
+     * </ul>
+     * [...]<p>
+     * 
+     * For further details see {@link ProcessInfo} 
+     * 
+     * @param pid The PID of the searched process
+     * @param fastMode - In this mode JProcesses does not try to retrieve time consuming data as the use percentage or the owner of the process in Windows implementation
+     * @return {@link JProcesses} object with the information of the process
+     */
+    public static ProcessInfo getProcess(int pid, boolean fastMode) {
+        return getService().getProcess(pid, fastMode);
+    }
 
     /**
      * Static method that kills a process abruptly (forced mode)<br> 
