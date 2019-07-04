@@ -35,6 +35,7 @@ public class ProcessInfo {
     private String startTime;
     private String priority;
     private String command;
+    private String ppid;
     
     //Used to store system specific data
     private Map<String, String> extraData = new HashMap<String, String>();
@@ -43,6 +44,9 @@ public class ProcessInfo {
     }
 
     public ProcessInfo(String pid, String time, String name, String user, String virtualMemory, String physicalMemory, String cpuUsage, String startTime, String priority, String command) {
+        this(pid, time, name, user, virtualMemory, physicalMemory, cpuUsage, startTime, priority, command, null);
+    }
+    public ProcessInfo(String pid, String time, String name, String user, String virtualMemory, String physicalMemory, String cpuUsage, String startTime, String priority, String command, String ppid) {
         this.pid = pid;
         this.time = time;
         this.name = name;
@@ -53,6 +57,7 @@ public class ProcessInfo {
         this.startTime = startTime;
         this.priority = priority;
         this.command = command;
+        this.ppid = ppid;
     }
 
     public String getPid() {
@@ -125,6 +130,14 @@ public class ProcessInfo {
 
     public void setCommand(String command) {
         this.command = command;
+    }
+
+    public String getPpid() {
+        return ppid;
+    }
+
+    public void setPpid(String ppid) {
+        this.ppid = ppid;
     }
 
     public String getPriority() {
