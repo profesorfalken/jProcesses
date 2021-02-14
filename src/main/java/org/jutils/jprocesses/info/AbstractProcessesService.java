@@ -83,6 +83,7 @@ abstract class AbstractProcessesService implements ProcessesService {
             info.setUser(map.get("user"));
             info.setVirtualMemory(map.get("virtual_memory"));
             info.setPriority(map.get("priority"));
+            info.setPpid(map.get("ppid"));
             
             //Adds extra data
             info.setExtraData(map);
