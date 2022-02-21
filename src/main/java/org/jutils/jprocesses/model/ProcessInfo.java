@@ -15,6 +15,7 @@
  */
 package org.jutils.jprocesses.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,8 +24,10 @@ import java.util.Map;
  *
  * @author Javier Garcia Alonso
  */
-public class ProcessInfo {
+public class ProcessInfo implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+    
     private String pid;
     private String time;
     private String name;
