@@ -141,26 +141,11 @@ obtain the owner and CPU usage on Windows. On Unix it has no effect.
   `ProcessesUtils.setCustomDateFormat("dd MMM yyyy HH:mm:ss")` and
   `ProcessesUtils.setCustomLocale(new Locale("no"))`.
 
-## Building ##
-
-```bash
-mvn verify
-```
-
-Building requires JDK 11 or newer (the compiler uses `--release 8`). The
-resulting JAR targets Java 8 and is tested on recent JDKs. The Windows parser
-tests use a fake WMI provider, so they can run on any OS; the real WMI
-integration tests run in the `windows-latest` CI job.
-
 ## Roadmap ##
 
 The next milestone is **1.8.0**. See [ROADMAP.md](ROADMAP.md) for the planned
 parent/child process support, process-tree termination, fast-mode user data,
 remote credentials and API cleanup.
-
-## More info ##
-
-Webpage: http://www.jprocesses.org
 
 ## Special thanks ##
 
