@@ -1,17 +1,31 @@
+/*
+ * Copyright 2016 Javier Garcia Alonso.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jutils.jprocesses;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jutils.jprocesses.model.ProcessInfo;
 import org.jutils.jprocesses.model.WindowsPriority;
-import org.jutils.jprocesses.util.OSDetector;
 
-import java.util.ArrayList;
+import java.lang.management.ManagementFactory;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -20,117 +34,75 @@ import static org.junit.Assert.assertTrue;
  */
 public class JProcessesTest {
 
-    public JProcessesTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
-    /**
-     * Test of getProcessList method, of class JProcesses.
-     */
     @Test
     public void testGetProcessList() {
-        System.out.println("===============Testing getProcessList============");
         List<ProcessInfo> processesList = JProcesses.get().fastMode().listProcesses();
 
-        assertTrue(processesList != null && processesList.size() > 0);
+        assertNotNull(processesList);
+        assertFalse(processesList.isEmpty());
 
         for (final ProcessInfo processInfo : processesList) {
-            System.out.println("Process PID: " + processInfo.getPid());
-            System.out.println("Process Name: " + processInfo.getName());
-            System.out.println("Process Time: " + processInfo.getTime());
-            System.out.println("User: " + processInfo.getUser());
-            System.out.println("Virtual Memory: " + processInfo.getVirtualMemory());
-            System.out.println("Physical Memory: " + processInfo.getPhysicalMemory());
-            System.out.println("CPU usage: " + processInfo.getCpuUsage());
-            System.out.println("Start Time: " + processInfo.getStartTime());
-            System.out.println("Start DateTime: "
-                    + processInfo.getExtraData().get("start_datetime"));
-            System.out.println("Priority: " + processInfo.getPriority());
-            System.out.println("Full command: " + processInfo.getCommand());
-            System.out.println("------------------");
+            assertNotNull(processInfo.getPid());
         }
-        System.out.println("===============End test getProcessList============");
     }
 
-    /**
-     * Test of getProcessList method by name, of class JProcesses.
-     */
     @Test
     public void testGetProcessListByName() {
-        System.out.println("===============Testing getProcessList by name============");
-        //JProcesses.fastMode = true;
-        String processToSearch = "java";
-        if (OSDetector.isWindows()) {
-            processToSearch += ".exe";
-        }
+        int selfPid = getSelfPid();
+        ProcessInfo self = JProcesses.getProcess(selfPid);
+        assertNotNull("The current JVM process must be visible", self);
 
-        List<ProcessInfo> processesList = JProcesses.getProcessList(processToSearch);
+        List<ProcessInfo> processesList = JProcesses.getProcessList(self.getName());
 
-        assertTrue(processesList != null && processesList.size() > 0);
+        assertNotNull(processesList);
+        assertFalse(processesList.isEmpty());
 
-        for (final ProcessInfo processInfo : processesList) {
-            System.out.println("Process PID: " + processInfo.getPid());
-            System.out.println("Process Name: " + processInfo.getName());
-            System.out.println("Process Time: " + processInfo.getTime());
-            System.out.println("User: " + processInfo.getUser());
-            System.out.println("Virtual Memory: " + processInfo.getVirtualMemory());
-            System.out.println("Physical Memory: " + processInfo.getPhysicalMemory());
-            System.out.println("CPU usage: " + processInfo.getCpuUsage());
-            System.out.println("Start Time: " + processInfo.getStartTime());
-            System.out.println("Priority: " + processInfo.getPriority());
-            System.out.println("Command: " + processInfo.getCommand());
-            System.out.println("------------------");
-        }
-
-        //Compare list with a manually retrieved list
-        List<ProcessInfo> processesListFull = JProcesses.getProcessList();
-        List<ProcessInfo> processesListFound = new ArrayList<ProcessInfo>();
-        for (final ProcessInfo process : processesListFull) {
-            if (processToSearch.equals(process.getName())) {
-                processesListFound.add(process);
+        boolean found = false;
+        for (final ProcessInfo process : processesList) {
+            assertEquals(self.getName(), process.getName());
+            if (String.valueOf(selfPid).equals(process.getPid())) {
+                found = true;
             }
         }
-
-        assertTrue("Manually list differs from search founded " 
-                + processesListFound.size() + " instead of " + processesList.size(), 
-                processesList.size() == processesListFound.size()
-        );
-        
-        System.out.println("===============End test getProcessList by name============");
+        assertTrue("The current JVM process must be found by name", found);
     }
 
-    /**
-     * Test of getProcessList method by name, of class JProcesses.
-     */
-    //@Test
+    @Test
+    public void testGetProcessByPid() {
+        int selfPid = getSelfPid();
+
+        ProcessInfo process = JProcesses.getProcess(selfPid);
+
+        assertNotNull(process);
+        assertEquals(String.valueOf(selfPid), process.getPid());
+    }
+
+    @Test
+    public void testGetProcessByPidFastMode() {
+        int selfPid = getSelfPid();
+
+        ProcessInfo process = JProcesses.getProcess(selfPid, true);
+
+        assertNotNull(process);
+        assertEquals(String.valueOf(selfPid), process.getPid());
+    }
+
+    @Test
+    public void testInvalidPidIsRejected() {
+        assertPidRejected(0);
+        assertPidRejected(-1);
+    }
+
+    @Test
+    @Ignore("Destructive: requires a live PID and, usually, elevated rights")
     public void testKill() {
-        System.out.println("===============Testing killProcess============");
         boolean success = JProcesses.killProcess(3844).isSuccess();
-
-        System.out.println("===============End test killProcess============");
+        assertTrue(success);
     }
 
-    /**
-     * Test of getProcessList method by name, of class JProcesses.
-     */
-    //@Test
+    @Test
+    @Ignore("Destructive and platform dependent: uses a hardcoded Windows PID")
     public void testChangePriority() {
-        System.out.println("===============Testing changePriority============");
         boolean ok = JProcesses.changePriority(3260, WindowsPriority.HIGH).isSuccess();
         assertTrue(ok);
 
@@ -142,7 +114,37 @@ public class JProcessesTest {
 
         process = JProcesses.getProcess(3260);
         assertTrue(String.valueOf(8).equals(process.getPriority()));
+    }
 
-        System.out.println("===============End test changePriority============");
+    private void assertPidRejected(int pid) {
+        try {
+            JProcesses.getProcess(pid);
+            throw new AssertionError("getProcess must reject PID " + pid);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            JProcesses.killProcess(pid);
+            throw new AssertionError("killProcess must reject PID " + pid);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            JProcesses.killProcessGracefully(pid);
+            throw new AssertionError("killProcessGracefully must reject PID " + pid);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            JProcesses.changePriority(pid, 5);
+            throw new AssertionError("changePriority must reject PID " + pid);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
+    private static int getSelfPid() {
+        String runtimeName = ManagementFactory.getRuntimeMXBean().getName();
+        return Integer.parseInt(runtimeName.substring(0, runtimeName.indexOf('@')));
     }
 }

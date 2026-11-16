@@ -1,75 +1,238 @@
+/*
+ * Copyright 2016 Javier Garcia Alonso.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jutils.jprocesses.info;
 
-import com.profesorfalken.wmi4java.WMI4Java;
-import com.profesorfalken.wmi4java.WMIClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.jutils.jprocesses.model.ProcessInfo;
-import org.jutils.jprocesses.util.OSDetector;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
 
 public class WindowsProcessesServiceTest {
 
-    @Mock
-    WMI4Java wmi4Java;
-    WindowsProcessesService srv;
-    ProcessInfo processInfo1;
-    ProcessInfo processInfo2;
-    ProcessInfo processInfo3;
-    ProcessInfo processInfo4;
-    ProcessInfo processInfo5;
+    private FakeWmiDataProvider wmi;
+    private TestWindowsProcessesService srv;
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        srv = new WindowsProcessesService(wmi4Java);
-        processInfo1 = new ProcessInfo("3644", "00:09:568", "idea64.exe", "Denis", "4188632", "1056660", "100", "13:58:15", "8", "\"C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\bin\\idea64.exe\"");
-        processInfo2 = new ProcessInfo("6936", "00:01:85", "DOOMx64.exe", "Denis", "2429212", "1023348", "6", "14:47:12", "8", "\"D:\\SteamLibrary\\steamapps\\common\\DOOM\\DOOMx64.exe\"");
-        processInfo3 = new ProcessInfo("2876", "00:03:194", "chrome.exe", "Denis", "554672", "141348", "0", "11:54:00", "8", "\"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe\" --no-startup-window /prefetch:5");
-        processInfo4 = new ProcessInfo("6700", "00:00:01", "java.exe", "Denis", "2006344", "83756", "2", "13:58:45", "8", "\"C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\bin\\java\" -Djava.awt.headless=true -Didea.version==2016.1.2 -Xmx512m -Didea.maven.embedder.version=3.0.5 -Dfile.encoding=windows-1251 -classpath \"C:/Program Files (x86)/JetBrains/IntelliJ IDEA Community Edition 2016.1/lib/resources_en.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\log4j.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\slf4j-api-1.7.10.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\slf4j-log4j12-1.7.10.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\jna.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\resources_en.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\util.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\oromatcher.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\annotations.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\snappy-in-java-0.3.1.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\trove4j.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\jna-platform.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\jdom.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\picocontainer.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\lucene-core-2.4.1.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven-server-api.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3-server-common.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3-server-lib\\archetype-catalog-2.2.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3-server-lib\\archetype-common-2.2.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3-server-lib\\maven-dependency-tree-1.2.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3-server-lib\\nexus-indexer-3.0.4.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3-server-lib\\nexus-indexer-artifact-1.0.1.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven30-server-impl.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\aether-api-1.13.1.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\aether-connector-wagon-1.13.1.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\aether-impl-1.13.1.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\aether-spi-1.13.1.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\aether-util-1.13.1.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\commons-cli-1.2.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\commons-io-2.2.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\commons-lang-2.6.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-aether-provider-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-artifact-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-compat-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-core-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-embedder-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-model-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-model-builder-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-plugin-api-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-repository-metadata-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-settings-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\maven-settings-builder-3.0.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\plexus-cipher-1.7.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\plexus-component-annotations-1.5.5.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\plexus-interpolation-1.14.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\plexus-sec-dispatcher-1.3.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\plexus-utils-2.0.6.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\sisu-guava-0.9.9.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\sisu-guice-3.1.0-no_aop.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\sisu-inject-bean-2.3.0.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\sisu-inject-plexus-2.3.0.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\wagon-file-2.8.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\wagon-http-2.8-shaded.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\wagon-http-shared-2.8.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\lib\\wagon-provider-api-2.8.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\maven\\lib\\maven3\\boot\\plexus-classworlds-2.4.jar\" org.jetbrains.idea.maven.server.RemoteMavenServer");
-        processInfo5 = new ProcessInfo("8160", "00:00:00", "java.exe", "Denis", "3596832", "461036", "3", "15:18:48", "8", "\"C:\\Program Files\\Java\\jdk1.8.0_60\\bin\\java\" -agentlib:jdwp=transport=dt_socket,address=127.0.0.1:53995,suspend=y,server=n -ea -Didea.junit.sm_runner -Dfile.encoding=UTF-8 -classpath \"C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\lib\\idea_rt.jar;C:\\Program Files (x86)\\JetBrains\\IntelliJ IDEA Community Edition 2016.1\\plugins\\junit\\lib\\junit-rt.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\charsets.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\deploy.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\javaws.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\jce.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\jfr.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\jfxswt.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\jsse.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\management-agent.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\plugin.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\resources.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\rt.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\access-bridge-64.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\cldrdata.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\dnsns.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\jaccess.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\jfxrt.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\localedata.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\nashorn.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\sunec.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\sunjce_provider.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\sunmscapi.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\sunpkcs11.jar;C:\\Program Files\\Java\\jdk1.8.0_60\\jre\\lib\\ext\\zipfs.jar;D:\\dev\\jProcesses\\target\\test-classes;D:\\dev\\jProcesses\\target\\classes;C:\\Users\\Denis\\.m2\\repository\\junit\\junit\\4.10\\junit-4.10.jar;C:\\Users\\Denis\\.m2\\repository\\org\\hamcrest\\hamcrest-core\\1.1\\hamcrest-core-1.1.jar;C:\\Users\\Denis\\.m2\\repository\\com\\profesorfalken\\WMI4Java\\1.1\\WMI4Java-1.1.jar;C:\\Users\\Denis\\.m2\\repository\\com\\profesorfalken\\jPowerShell\\1.3\\jPowerShell-1.3.jar;C:\\Users\\Denis\\.m2\\repository\\org\\mockito\\mockito-all\\1.8.4\\mockito-all-1.8.4.jar\" com.intellij.rt.execution.junit.JUnitStarter -ideVersion5 org.jutils.jprocesses.info.WindowsProcessesServiceTest,testGetListWithName");
-        when(wmi4Java.getRawWMIObjectOutput(eq(WMIClass.WIN32_PROCESS))).thenReturn(WMI_PROCESS1 + WMI_PROCESS2 + WMI_PROCESS3 + WMI_PROCESS4 + WMI_PROCESS5);
-        when(wmi4Java.getRawWMIObjectOutput(eq(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS))).thenReturn(WMI_PROCESS1_PERF + WMI_PROCESS2_PERF + WMI_PROCESS3_PERF + WMI_PROCESS4_PERF + WMI_PROCESS5_PERF);
-        when(wmi4Java.VBSEngine()).thenReturn(wmi4Java);
+        wmi = new FakeWmiDataProvider(
+                WMI_PROCESS1 + WMI_PROCESS2 + WMI_PROCESS3 + WMI_PROCESS4 + WMI_PROCESS5,
+                WMI_PROCESS1_PERF + WMI_PROCESS2_PERF + WMI_PROCESS3_PERF
+                        + WMI_PROCESS4_PERF + WMI_PROCESS5_PERF);
+        srv = new TestWindowsProcessesService(wmi,
+                "3644:Denis\n6936:Denis\n2876:Denis\n6700:Denis\n8160:Denis\n");
     }
 
-    /**
-     * Test of getProcessList method, of class JProcesses.
-     */
     @Test
-    public void testGetList() {
-        if (OSDetector.isWindows()) {
-            List<ProcessInfo> list = srv.getList();
-            assertEquals(5, list.size());
-            assertTrue(list.contains(processInfo1));
-            assertTrue(list.contains(processInfo2));
-            assertTrue(list.contains(processInfo3));
-            assertTrue(list.contains(processInfo4));
-            assertTrue(list.contains(processInfo5));
+    public void parsesAllProcesses() {
+        List<ProcessInfo> processes = srv.getList();
+
+        assertEquals(5, processes.size());
+
+        ProcessInfo idea = find(processes, "3644");
+        assertNotNull(idea);
+        assertEquals("idea64.exe", idea.getName());
+        assertEquals("Denis", idea.getUser());
+        assertEquals("4188632", idea.getVirtualMemory());
+        assertEquals("1056660", idea.getPhysicalMemory());
+        assertEquals("6", idea.getCpuUsage());
+        assertEquals("13:58:15", idea.getStartTime());
+        assertEquals("8", idea.getPriority());
+        assertEquals("00:09:28", idea.getTime());
+        assertTrue(idea.getCommand().contains("idea64.exe"));
+        assertEquals("05/14/2016 13:58:15",
+                idea.getExtraData().get("start_datetime"));
+
+        ProcessInfo doom = find(processes, "6936");
+        assertNotNull(doom);
+        assertEquals("100", doom.getCpuUsage());
+        assertEquals("00:01:25", doom.getTime());
+
+        ProcessInfo chrome = find(processes, "2876");
+        assertNotNull(chrome);
+        assertEquals("0", chrome.getCpuUsage());
+        assertEquals("00:03:14", chrome.getTime());
+
+        ProcessInfo java1 = find(processes, "6700");
+        assertNotNull(java1);
+        assertEquals("2", java1.getCpuUsage());
+        assertEquals("00:00:01", java1.getTime());
+
+        //The last performance block has no following "Caption" line
+        ProcessInfo java2 = find(processes, "8160");
+        assertNotNull(java2);
+        assertEquals("3", java2.getCpuUsage());
+        assertEquals("00:00:00", java2.getTime());
+        assertEquals("Denis", java2.getUser());
+    }
+
+    @Test
+    public void filtersByNameCaseInsensitively() {
+        List<ProcessInfo> processes = srv.getList("java.exe");
+
+        assertEquals(2, processes.size());
+        assertEquals("java.exe", processes.get(0).getName());
+        assertEquals("java.exe", processes.get(1).getName());
+        assertNotNull(wmi.getLastFilters());
+        assertTrue(wmi.getLastFilters().get(0).contains("java.exe"));
+        assertEquals(2, srv.getList("JAVA.EXE").size());
+        //Matching is exact: "java" must not match "java.exe"
+        assertTrue(srv.getList("java").isEmpty());
+    }
+
+    @Test
+    public void unsafeNamesAreNotEmbeddedInWql() {
+        assertTrue(srv.getList("java' OR 1=1 --").isEmpty());
+        assertNull(wmi.getLastFilters());
+    }
+
+    @Test
+    public void fastModeLeavesUserAndCpuEmpty() {
+        List<ProcessInfo> processes = srv.getList(true);
+
+        assertEquals(5, processes.size());
+        assertNull(find(processes, "3644").getUser());
+        assertNull(find(processes, "3644").getCpuUsage());
+    }
+
+    @Test
+    public void getsProcessByPid() {
+        ProcessInfo process = srv.getProcess(3644);
+
+        assertNotNull(process);
+        assertEquals("idea64.exe", process.getName());
+        assertEquals("6", process.getCpuUsage());
+        assertEquals("ProcessId = 3644", wmi.getLastFilters().get(0));
+
+        assertNull(srv.getProcess(999999));
+    }
+
+    @Test
+    public void invalidPidsAreRejected() {
+        assertPidRejected(0);
+        assertPidRejected(-1);
+    }
+
+    @Test
+    public void extraDataIsNotReusedBetweenCalls() {
+        assertNotNull(find(srv.getList(), "3644").getCpuUsage());
+
+        wmi.setPerformanceOutput("");
+        srv.setOwners("");
+
+        ProcessInfo process = find(srv.getList(), "3644");
+        assertNull(process.getCpuUsage());
+        assertNull(process.getUser());
+    }
+
+    @Test
+    public void malformedWmiOutputDoesNotThrow() {
+        assertTrue(srv.parseList("").isEmpty());
+        assertTrue(srv.parseList("garbage without colon\n").isEmpty());
+        assertEquals(1, srv.parseList("Caption: x\nName: y\n").size());
+        assertEquals(1, srv.parseList("Caption: x\nUserModeTime: \nVirtualSize: \n"
+                + "WorkingSetSize: \nCreationDate: \n").size());
+    }
+
+    private void assertPidRejected(int pid) {
+        try {
+            srv.getProcess(pid);
+            throw new AssertionError("getProcess must reject PID " + pid);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            srv.killProcess(pid);
+            throw new AssertionError("killProcess must reject PID " + pid);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            srv.killProcessGracefully(pid);
+            throw new AssertionError("killProcessGracefully must reject PID " + pid);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            srv.changePriority(pid, 8);
+            throw new AssertionError("changePriority must reject PID " + pid);
+        } catch (IllegalArgumentException expected) {
+            // expected
         }
     }
 
-    @Test
-    public void testGetListWithName() {
-        if (OSDetector.isWindows()) {
-            when(wmi4Java.properties(anyList())).thenReturn(wmi4Java);
-            when(wmi4Java.filters(anyList())).thenReturn(wmi4Java);
-            when(wmi4Java.filters(anyList())).thenReturn(wmi4Java);
-            when(wmi4Java.getRawWMIObjectOutput(eq(WMIClass.WIN32_PROCESS))).thenReturn(WMI_PROCESS4 + WMI_PROCESS5);
-            when(wmi4Java.getRawWMIObjectOutput(eq(WMIClass.WIN32_PERFFORMATTEDDATA_PERFPROC_PROCESS))).thenReturn(WMI_PROCESS4_PERF + WMI_PROCESS5_PERF);
-            List<ProcessInfo> list = srv.getList("java.exe");
-            assertEquals(2, list.size());
-            assertTrue(list.contains(processInfo4));
-            assertTrue(list.contains(processInfo5));
+    private static ProcessInfo find(List<ProcessInfo> processes, String pid) {
+        for (ProcessInfo process : processes) {
+            if (pid.equals(process.getPid())) {
+                return process;
+            }
+        }
+        return null;
+    }
+
+    private static final class TestWindowsProcessesService extends WindowsProcessesService {
+
+        private String owners;
+
+        private TestWindowsProcessesService(WmiDataProvider wmi, String owners) {
+            super(wmi);
+            this.owners = owners;
+        }
+
+        @Override
+        protected String getProcessOwners() {
+            return owners;
+        }
+
+        private void setOwners(String owners) {
+            this.owners = owners;
+        }
+    }
+
+    private static final class FakeWmiDataProvider implements WmiDataProvider {
+
+        private final String processOutput;
+        private String performanceOutput;
+        private List<String> lastFilters;
+
+        private FakeWmiDataProvider(String processOutput, String performanceOutput) {
+            this.processOutput = processOutput;
+            this.performanceOutput = performanceOutput;
+        }
+
+        public String getRawProcessOutput(List<String> properties, List<String> filters) {
+            this.lastFilters = filters;
+            return processOutput;
+        }
+
+        public String getRawPerformanceOutput() {
+            return performanceOutput;
+        }
+
+        private void setPerformanceOutput(String performanceOutput) {
+            this.performanceOutput = performanceOutput;
+        }
+
+        private List<String> getLastFilters() {
+            return lastFilters;
         }
     }
 
@@ -486,5 +649,4 @@ public class WindowsProcessesServiceTest {
             + "WorkingSet: 40710144\n"
             + "WorkingSetPeak: 45494272\n"
             + "WorkingSetPrivate: 30330880\n";
-
 }

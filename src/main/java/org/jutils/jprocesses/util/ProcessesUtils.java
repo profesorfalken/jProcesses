@@ -17,7 +17,9 @@ package org.jutils.jprocesses.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,78 +36,127 @@ import java.util.logging.Logger;
  *
  * @author Javier Garcia Alonso
  */
-@SuppressWarnings("Since15")
 public class ProcessesUtils {
 
+    private static final Logger LOGGER = Logger.getLogger(ProcessesUtils.class.getName());
+
     private static final String CRLF = "\r\n";
-    private static String customDateFormat;
-    private static Locale customLocale;
-  
+
+    /**
+     * Maximum time a system command is allowed to run before being forcibly
+     * destroyed. It can be overridden with the
+     * {@code jprocesses.commandTimeoutMillis} system property.
+     */
+    private static final long COMMAND_TIMEOUT_MILLIS = resolveCommandTimeout();
+
+    private static final long READER_JOIN_MILLIS = 2000L;
+
+    /**
+     * Charset used to decode command output. It can be overridden with the
+     * {@code jprocesses.charset} system property when the platform default
+     * does not match the output of {@code ps} or WMI.
+     */
+    private static final Charset COMMAND_CHARSET = resolveCommandCharset();
+
+    private static volatile String customDateFormat;
+    private static volatile Locale customLocale;
 
     //Hide constructor
     private ProcessesUtils() {
     }
 
+    /**
+     * Executes a command and returns its standard output. Standard error is
+     * merged into the output. The command is destroyed if it does not finish
+     * within {@code jprocesses.commandTimeoutMillis} (30 seconds by default).
+     *
+     * @param command command and arguments
+     * @return command output, or an empty string if it could not be executed
+     */
     public static String executeCommand(String... command) {
-        String commandOutput = null;
+        Process process = null;
 
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.redirectErrorStream(true); // redirect error stream to output stream
 
-            commandOutput = readData(processBuilder.start());
+            process = processBuilder.start();
+            closeProcessInput(process);
+
+            //Read in a separate thread while waiting, so that a full output
+            //buffer can never deadlock the child process.
+            StreamCollector collector = new StreamCollector(process.getInputStream());
+            Thread reader = new Thread(collector, "jprocesses-command-reader");
+            reader.setDaemon(true);
+            reader.start();
+
+            if (!process.waitFor(COMMAND_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
+                LOGGER.log(Level.WARNING, "Command timed out after {0} ms: {1}",
+                        new Object[]{COMMAND_TIMEOUT_MILLIS, Arrays.toString(command)});
+                process.destroyForcibly();
+                process.waitFor();
+            }
+
+            reader.join(READER_JOIN_MILLIS);
+
+            return collector.getOutput();
         } catch (IOException ex) {
-            commandOutput = "";
-            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, "Error executing command", ex);
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error executing command", ex);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            if (process != null) {
+                process.destroyForcibly();
+            }
+            LOGGER.log(Level.SEVERE, "Interrupted while executing command", ex);
         }
 
-        return commandOutput;
+        return "";
     }
 
-    private static String readData(Process process) {
-        StringBuilder commandOutput = new StringBuilder();
-        BufferedReader processOutput = null;
-
-        try {
-            processOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            String line;
-            while ((line = processOutput.readLine()) != null) {
-                if (!line.isEmpty()) {
-                    commandOutput.append(line).append(CRLF);
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, "Error reading data", ex);
-        } finally {
-            try {
-                if (processOutput != null) {
-                    processOutput.close();
-                }
-            } catch (IOException ioe) {
-                Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, "Error closing reader", ioe);
-            }
-        }
-
-        return commandOutput.toString();
-    }
-
+    /**
+     * Executes a command and returns its exit code, discarding its output.
+     *
+     * @param command command and arguments
+     * @return the command exit code, or {@code -1} if it could not be executed
+     * or it timed out
+     */
     public static int executeCommandAndGetCode(String... command) {
-        Process process;
+        Process process = null;
 
         try {
-            process = Runtime.getRuntime().exec(command);
-            process.waitFor();
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.redirectErrorStream(true);
+
+            process = processBuilder.start();
+            closeProcessInput(process);
+
+            StreamCollector collector = new StreamCollector(process.getInputStream());
+            Thread reader = new Thread(collector, "jprocesses-command-reader");
+            reader.setDaemon(true);
+            reader.start();
+
+            if (!process.waitFor(COMMAND_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
+                LOGGER.log(Level.WARNING, "Command timed out after {0} ms: {1}",
+                        new Object[]{COMMAND_TIMEOUT_MILLIS, Arrays.toString(command)});
+                process.destroyForcibly();
+                process.waitFor();
+                return -1;
+            }
+
+            reader.join(READER_JOIN_MILLIS);
+
+            return process.exitValue();
         } catch (IOException ex) {
-            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             return -1;
         } catch (InterruptedException ex) {
-            Logger.getLogger(ProcessesUtils.class.getName()).log(Level.SEVERE, null, ex);
+            Thread.currentThread().interrupt();
+            if (process != null) {
+                process.destroyForcibly();
+            }
+            LOGGER.log(Level.SEVERE, null, ex);
             return -1;
         }
-
-        return process.exitValue();
     }
 
     /**
@@ -118,15 +170,15 @@ public class ProcessesUtils {
      * @return string with formatted time (hh:mm:ss)
      */
     public static String parseWindowsDateTimeToSimpleTime(String dateTime) {
-        String returnedDate = dateTime;
-        if (dateTime != null && !dateTime.isEmpty()) {
-            String hour = dateTime.substring(8, 10);
-            String minutes = dateTime.substring(10, 12);
-            String seconds = dateTime.substring(12, 14);
-
-            returnedDate = hour + ":" + minutes + ":" + seconds;
+        if (dateTime == null || dateTime.length() < 14) {
+            return dateTime;
         }
-        return returnedDate;
+
+        String hour = dateTime.substring(8, 10);
+        String minutes = dateTime.substring(10, 12);
+        String seconds = dateTime.substring(12, 14);
+
+        return hour + ":" + minutes + ":" + seconds;
     }
 
     /**
@@ -140,19 +192,19 @@ public class ProcessesUtils {
      * @return string with formatted time (mm/dd/yyyy HH:mm:ss)
      */
     public static String parseWindowsDateTimeToFullDate(String dateTime) {
-        String returnedDate = dateTime;
-        if (dateTime != null && !dateTime.isEmpty()) {
-            String year = dateTime.substring(0, 4);
-            String month = dateTime.substring(4, 6);
-            String day = dateTime.substring(6, 8);
-            String hour = dateTime.substring(8, 10);
-            String minutes = dateTime.substring(10, 12);
-            String seconds = dateTime.substring(12, 14);
-
-            returnedDate = month + "/" + day + "/" + year + " " + hour + ":"
-                    + minutes + ":" + seconds;
+        if (dateTime == null || dateTime.length() < 14) {
+            return dateTime;
         }
-        return returnedDate;
+
+        String year = dateTime.substring(0, 4);
+        String month = dateTime.substring(4, 6);
+        String day = dateTime.substring(6, 8);
+        String hour = dateTime.substring(8, 10);
+        String minutes = dateTime.substring(10, 12);
+        String seconds = dateTime.substring(12, 14);
+
+        return month + "/" + day + "/" + year + " " + hour + ":"
+                + minutes + ":" + seconds;
     }
 
     /**
@@ -162,23 +214,28 @@ public class ProcessesUtils {
      * @param longFormatDate original datetime format
      *
      * @return string with formatted date and time (mm/dd/yyyy HH:mm:ss)
+     * @throws ParseException if the date cannot be parsed with any known format
      */
     public static String parseUnixLongTimeToFullDate(String longFormatDate) throws ParseException {
+        if (longFormatDate == null || longFormatDate.trim().isEmpty()) {
+            throw new ParseException("Date is empty", 0);
+        }
+
         DateFormat targetFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
         List<String> formatsToTry = new ArrayList<String>();
         formatsToTry.addAll(Arrays.asList("MMM dd HH:mm:ss yyyy", "dd MMM HH:mm:ss yyyy"));
         List<Locale> localesToTry = new ArrayList<Locale>();
-        localesToTry.addAll(Arrays.asList(Locale.getDefault(), 
-            Locale.getDefault(Locale.Category.FORMAT), 
+        localesToTry.addAll(Arrays.asList(Locale.getDefault(),
+            Locale.getDefault(Locale.Category.FORMAT),
             Locale.ENGLISH)
         );
-        if (getCustomDateFormat() != null) {           
+        if (getCustomDateFormat() != null) {
             formatsToTry.add(0, getCustomDateFormat());
         }
         if (getCustomLocale() != null) {
             localesToTry.add(0, getCustomLocale());
         }
-      
+
         ParseException lastException = null;
         for (Locale locale : localesToTry) {
             for (String format : formatsToTry) {
@@ -190,13 +247,14 @@ public class ProcessesUtils {
                 }
             }
         }
-        throw lastException; 
+
+        throw lastException;
     }
-    
+
     public static String getCustomDateFormat() {
         return customDateFormat;
     }
-  
+
     /**
      * Custom date format to be used when parsing date string in "ps" output<br>
      * NOTE: We assume 5 space separated fields for date, where we pass the last 4 to the parser, e.g.
@@ -209,7 +267,7 @@ public class ProcessesUtils {
     }
 
     public static Locale getCustomLocale() {
-      return customLocale;
+        return customLocale;
     }
 
     /**
@@ -218,5 +276,67 @@ public class ProcessesUtils {
      */
     public static void setCustomLocale(Locale customLocale) {
         ProcessesUtils.customLocale = customLocale;
-      }
+    }
+
+    private static void closeProcessInput(Process process) {
+        try {
+            //The commands used by this library never read from stdin
+            process.getOutputStream().close();
+        } catch (IOException ex) {
+            LOGGER.log(Level.FINE, "Error closing command input", ex);
+        }
+    }
+
+    private static long resolveCommandTimeout() {
+        long timeout = Long.getLong("jprocesses.commandTimeoutMillis", 30000L);
+        return timeout > 0 ? timeout : 30000L;
+    }
+
+    private static Charset resolveCommandCharset() {
+        String charsetName = System.getProperty("jprocesses.charset");
+        if (charsetName != null && !charsetName.trim().isEmpty()) {
+            try {
+                return Charset.forName(charsetName);
+            } catch (RuntimeException ex) {
+                LOGGER.log(Level.WARNING, "Unsupported jprocesses.charset: " + charsetName, ex);
+            }
+        }
+        return Charset.defaultCharset();
+    }
+
+    /**
+     * Collects the output of a process in a background thread.
+     */
+    private static final class StreamCollector implements Runnable {
+
+        private final BufferedReader reader;
+        private final StringBuffer output = new StringBuffer();
+
+        private StreamCollector(InputStream inputStream) {
+            this.reader = new BufferedReader(new InputStreamReader(inputStream, COMMAND_CHARSET));
+        }
+
+        public void run() {
+            try {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (!line.isEmpty()) {
+                        output.append(line).append(CRLF);
+                    }
+                }
+            } catch (IOException ex) {
+                LOGGER.log(Level.SEVERE, "Error reading command output", ex);
+            } finally {
+                try {
+                    reader.close();
+                } catch (IOException ex) {
+                    LOGGER.log(Level.SEVERE, "Error closing reader", ex);
+                }
+            }
+        }
+
+        private String getOutput() {
+            return output.toString();
+        }
+    }
 }

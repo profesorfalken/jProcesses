@@ -28,8 +28,7 @@ public class ProcessesFactory {
     private ProcessesFactory() {
     }
     
-   //use getShape method to get object of type shape 
-   public static ProcessesService getService(){     
+   public static ProcessesService getService(){
       if (OSDetector.isWindows()) {
           return new WindowsProcessesService();
       } else if (OSDetector.isUnix()) {

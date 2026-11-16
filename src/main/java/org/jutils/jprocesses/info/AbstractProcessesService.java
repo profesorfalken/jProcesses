@@ -28,24 +28,21 @@ import java.util.Map;
  * @author Javier Garcia Alonso
  */
 abstract class AbstractProcessesService implements ProcessesService {
-    
-    protected boolean fastMode = false;
 
     public List<ProcessInfo> getList() {
         return getList(null);
     }
-    
+
     public List<ProcessInfo> getList(boolean fastMode) {
         return getList(null, fastMode);
     }
-    
+
     public List<ProcessInfo> getList(String name) {
         return getList(name, false);
     }
 
     public List<ProcessInfo> getList(String name, boolean fastMode) {
-        this.fastMode = fastMode;
-        String rawData = getProcessesData(name);
+        String rawData = getProcessesData(name, fastMode);
 
         List<Map<String, String>> mapList = parseList(rawData);
 
@@ -53,43 +50,77 @@ abstract class AbstractProcessesService implements ProcessesService {
     }
 
     public JProcessesResponse killProcess(int pid) {
+        validatePid(pid);
         return kill(pid);
     }
 
     public JProcessesResponse killProcessGracefully(int pid) {
+        validatePid(pid);
         return killGracefully(pid);
+    }
+
+    /**
+     * Rejects PIDs that could have a special meaning for the operating system.
+     * For example, on POSIX systems {@code kill -1} signals every process the
+     * user is allowed to signal and {@code kill 0} signals the whole process
+     * group, so they must never reach the command line by accident.
+     *
+     * @param pid process identifier
+     * @throws IllegalArgumentException if the PID is not a positive number
+     */
+    protected static void validatePid(int pid) {
+        if (pid <= 0) {
+            throw new IllegalArgumentException("PID must be a positive integer (was " + pid + ")");
+        }
     }
 
     protected abstract List<Map<String, String>> parseList(String rawData);
 
-    protected abstract String getProcessesData(String name);
+    protected abstract String getProcessesData(String name, boolean fastMode);
 
     protected abstract JProcessesResponse kill(int pid);
 
     protected abstract JProcessesResponse killGracefully(int pid);
 
-    private List<ProcessInfo> buildInfoFromMap(List<Map<String, String>> mapList) {
+    protected List<ProcessInfo> buildInfoFromMap(List<Map<String, String>> mapList) {
         List<ProcessInfo> infoList = new ArrayList<ProcessInfo>();
 
-        for (final Map<String, String> map : mapList) {
-            ProcessInfo info = new ProcessInfo();
-            info.setPid(map.get("pid"));
-            info.setName(map.get("proc_name"));
-            info.setTime(map.get("proc_time"));
-            info.setCommand((map.get("command") != null) ? map.get("command") : "");
-            info.setCpuUsage(map.get("cpu_usage"));
-            info.setPhysicalMemory(map.get("physical_memory"));
-            info.setStartTime(map.get("start_time"));
-            info.setUser(map.get("user"));
-            info.setVirtualMemory(map.get("virtual_memory"));
-            info.setPriority(map.get("priority"));
-            
-            //Adds extra data
-            info.setExtraData(map);
+        if (mapList == null) {
+            return infoList;
+        }
 
-            infoList.add(info);
+        for (final Map<String, String> map : mapList) {
+            if (map != null) {
+                infoList.add(buildInfo(map));
+            }
         }
 
         return infoList;
+    }
+
+    /**
+     * Creates a {@link ProcessInfo} from the raw key/value data returned by the
+     * platform specific parser.
+     *
+     * @param map raw process data
+     * @return populated process information
+     */
+    protected ProcessInfo buildInfo(Map<String, String> map) {
+        ProcessInfo info = new ProcessInfo();
+        info.setPid(map.get("pid"));
+        info.setName(map.get("proc_name"));
+        info.setTime(map.get("proc_time"));
+        info.setCommand((map.get("command") != null) ? map.get("command") : "");
+        info.setCpuUsage(map.get("cpu_usage"));
+        info.setPhysicalMemory(map.get("physical_memory"));
+        info.setStartTime(map.get("start_time"));
+        info.setUser(map.get("user"));
+        info.setVirtualMemory(map.get("virtual_memory"));
+        info.setPriority(map.get("priority"));
+
+        //Adds extra data
+        info.setExtraData(map);
+
+        return info;
     }
 }

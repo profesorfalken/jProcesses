@@ -173,10 +173,26 @@ public class JProcesses {
      * For further details see {@link ProcessInfo} 
      * 
      * @param pid The PID of the searched process
-     * @return {@link JProcesses} object with the information of the process
+     * @return the process information, or {@code null} if it does not exist
+     * @throws IllegalArgumentException if the PID is not a positive number
      */
     public static ProcessInfo getProcess(int pid) {
         return getService().getProcess(pid);
+    }
+
+    /**
+     * Static method that returns the information of a process, optionally
+     * using the fast mode.<br>
+     * In fast mode the Windows implementation does not retrieve the owner or
+     * the CPU usage of the process.
+     *
+     * @param pid The PID of the searched process
+     * @param fastMode {@code true} to skip time-consuming Windows data
+     * @return the process information, or {@code null} if it does not exist
+     * @throws IllegalArgumentException if the PID is not a positive number
+     */
+    public static ProcessInfo getProcess(int pid, boolean fastMode) {
+        return getService().getProcess(pid, fastMode);
     }
 
     /**
@@ -186,6 +202,7 @@ public class JProcesses {
      * 
      * @param pid The PID of the process to kill
      * @return {@link JProcessesResponse} response object that contains information about the result of the operation
+     * @throws IllegalArgumentException if the PID is not a positive number
      */
     public static JProcessesResponse killProcess(int pid) {
         return getService().killProcess(pid);
@@ -199,20 +216,23 @@ public class JProcesses {
      * 
      * @param pid The PID of the process to kill
      * @return {@link JProcessesResponse} response object that contains information about the result of the operation
+     * @throws IllegalArgumentException if the PID is not a positive number
      */
     public static JProcessesResponse killProcessGracefully(int pid) {
         return getService().killProcessGracefully(pid);
     }
 
     /**
-     * Static method that changes the priority of a process<br> 
-     * If the process does not finish with this method, try with the stronger killProcess()<p>
-     * 
-     * For further details see {@link ProcessInfo} 
-     * 
-     * @param pid the PID of the process tochange priority
-     * @param newPriority integer with the new version. For windows you can use the helper constants at {@link WindowsPriority}
+     * Static method that changes the priority of a process<br>
+     * On Unix this is the "nice" value (-20 to 19); on Windows use the
+     * constants provided by {@link WindowsPriority}.<p>
+     *
+     * For further details see {@link ProcessInfo}
+     *
+     * @param pid the PID of the process to change priority
+     * @param newPriority the new priority value
      * @return {@link JProcessesResponse} response object that contains information about the result of the operation
+     * @throws IllegalArgumentException if the PID is not a positive number
      */
     public static JProcessesResponse changePriority(int pid, int newPriority) {
         return getService().changePriority(pid, newPriority);

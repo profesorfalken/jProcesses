@@ -21,10 +21,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jutils.jprocesses.model.JProcessesResponse;
 import org.jutils.jprocesses.model.ProcessInfo;
-import org.jutils.jprocesses.util.OSDetector;
 import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
@@ -34,85 +35,123 @@ import org.jutils.jprocesses.util.ProcessesUtils;
  */
 class UnixProcessesService extends AbstractProcessesService {
 
+    private static final Logger LOGGER = Logger.getLogger(UnixProcessesService.class.getName());
+
     //Use BSD sytle to get data in order to be compatible with Mac Systems(thanks to jkuharev for this tip)
     private static final String PS_COLUMNS = "pid,ruser,vsize,rss,%cpu,lstart,cputime,nice,ucomm";
     private static final String PS_FULL_COMMAND = "pid,command";
 
     private static final int PS_COLUMNS_SIZE = PS_COLUMNS.split(",").length;
     private static final int PS_FULL_COMMAND_SIZE = PS_FULL_COMMAND.split(",").length;
-    
-    private String nameFilter = null;
+    //"lstart" is returned as five space separated fields (weekday included);
+    //the command name is optional because it can be empty on some systems.
+    private static final int PS_MIN_ELEMENTS = PS_COLUMNS_SIZE + 3;
 
     @Override
     protected List<Map<String, String>> parseList(String rawData) {
         List<Map<String, String>> processesDataList = new ArrayList<Map<String, String>>();
+
+        if (rawData == null || rawData.isEmpty()) {
+            return processesDataList;
+        }
+
         String[] dataStringLines = rawData.split("\\r?\\n");
-        
-        int index;
+
         for (final String dataLine : dataStringLines) {
             String line = dataLine.trim();
-            if (line.startsWith("PID")) {
-                // skip header
-            } else {
-                // LinkedHashMap keeps the insertion order, thus easier to debug
-                Map<String, String> element = new LinkedHashMap<String, String>();
-                String[] elements = line.split("\\s+", PS_COLUMNS_SIZE + 5);
-                index = 0;
-                element.put("pid", elements[index++]);
-                element.put("user", elements[index++]);
-                element.put("virtual_memory", elements[index++]);
-                element.put("physical_memory", elements[index++]);
-                element.put("cpu_usage", elements[index++]);
-                index++; // Skip weekday
-                String longDate = elements[index++] + " " 
-                                + elements[index++] + " " 
-                                + elements[index++]+ " " 
-                                + elements[index++];                
-                element.put("start_time", elements[index - 2]);
-                try {
-                    element.put("start_datetime", 
-                            ProcessesUtils.parseUnixLongTimeToFullDate(longDate));
-                } catch (ParseException e) {
-                    element.put("start_datetime", "01/01/2000 00:00:00");
-                    System.err.println("Failed formatting date from ps: " + longDate + ", using \"01/01/2000 00:00:00\"");
-                }
-                element.put("proc_time", elements[index++]);
-                element.put("priority", elements[index++]);
-                element.put("proc_name", elements[index++]);                
-                // first init full command by content of proc_name
-                element.put("command", elements[index - 1]);
 
-                processesDataList.add(element);
+            //Skip the header and any unexpected line (warnings, error messages...)
+            if (line.isEmpty() || line.startsWith("PID")) {
+                continue;
             }
-        }
-        loadFullCommandData(processesDataList);
 
-        if (nameFilter != null) {
-            filterByName(processesDataList);
+            String[] elements = line.split("\\s+");
+
+            if (elements.length < PS_MIN_ELEMENTS) {
+                LOGGER.log(Level.FINE, "Skipping unexpected ps output line: {0}", line);
+                continue;
+            }
+
+            // LinkedHashMap keeps the insertion order, thus easier to debug
+            Map<String, String> element = new LinkedHashMap<String, String>();
+            int index = 0;
+            element.put("pid", elements[index++]);
+            element.put("user", elements[index++]);
+            element.put("virtual_memory", elements[index++]);
+            element.put("physical_memory", elements[index++]);
+            element.put("cpu_usage", elements[index++]);
+            index++; // Skip weekday
+            String month = elements[index++];
+            String day = elements[index++];
+            String clock = elements[index++];
+            String year = elements[index++];
+            String longDate = month + " " + day + " " + clock + " " + year;
+            element.put("start_time", clock);
+
+            try {
+                element.put("start_datetime",
+                        ProcessesUtils.parseUnixLongTimeToFullDate(longDate));
+            } catch (ParseException e) {
+                //Do not invent a fake date: just leave the field out
+                LOGGER.log(Level.WARNING, "Failed formatting date from ps: " + longDate, e);
+            }
+
+            element.put("proc_time", elements[index++]);
+            element.put("priority", elements[index++]);
+
+            StringBuilder procName = new StringBuilder();
+            if (index < elements.length) {
+                procName.append(elements[index++]);
+                while (index < elements.length) {
+                    procName.append(' ').append(elements[index++]);
+                }
+            }
+            element.put("proc_name", procName.toString());
+            // first init full command by content of proc_name
+            element.put("command", procName.toString());
+
+            processesDataList.add(element);
+        }
+
+        if (!processesDataList.isEmpty()) {
+            loadFullCommandData(processesDataList);
         }
 
         return processesDataList;
     }
 
     @Override
-    protected String getProcessesData(String name) {
-        if (name != null) {
-            if (OSDetector.isLinux()) {
-                return ProcessesUtils.executeCommand("ps",
-                        "-o", PS_COLUMNS, "-C", name);
-            } else {
-                this.nameFilter = name;
+    protected String getProcessesData(String name, boolean fastMode) {
+        //Name filtering is done after parsing so that every Unix/BSD flavor
+        //uses the same (exact) matching semantics.
+        return executeCommand("ps", "-e", "-o", PS_COLUMNS);
+    }
+
+    @Override
+    public List<ProcessInfo> getList(String name, boolean fastMode) {
+        List<ProcessInfo> processes = super.getList(name, fastMode);
+
+        if (name == null) {
+            return processes;
+        }
+
+        List<ProcessInfo> filtered = new ArrayList<ProcessInfo>();
+        for (final ProcessInfo process : processes) {
+            if (name.equals(process.getName())) {
+                filtered.add(process);
             }
         }
-        return ProcessesUtils.executeCommand("ps",
-                "-e", "-o", PS_COLUMNS);
+        return filtered;
     }
 
     @Override
     protected JProcessesResponse kill(int pid) {
         JProcessesResponse response = new JProcessesResponse();
-        if (ProcessesUtils.executeCommandAndGetCode("kill", "-9", String.valueOf(pid)) == 0) {
+        int exitCode = executeCommandAndGetCode("kill", "-9", String.valueOf(pid));
+        if (exitCode == 0) {
             response.setSuccess(true);
+        } else {
+            response.setMessage("kill exited with code " + exitCode);
         }
         return response;
     }
@@ -120,59 +159,59 @@ class UnixProcessesService extends AbstractProcessesService {
     @Override
     protected JProcessesResponse killGracefully(int pid) {
         JProcessesResponse response = new JProcessesResponse();
-        if (ProcessesUtils.executeCommandAndGetCode("kill", "-15", String.valueOf(pid)) == 0) {
+        int exitCode = executeCommandAndGetCode("kill", "-15", String.valueOf(pid));
+        if (exitCode == 0) {
             response.setSuccess(true);
+        } else {
+            response.setMessage("kill exited with code " + exitCode);
         }
         return response;
     }
 
     public JProcessesResponse changePriority(int pid, int priority) {
+        validatePid(pid);
         JProcessesResponse response = new JProcessesResponse();
-        if (ProcessesUtils.executeCommandAndGetCode("renice", String.valueOf(priority),
-                "-p", String.valueOf(pid)) == 0) {
+        int exitCode = executeCommandAndGetCode("renice", String.valueOf(priority),
+                "-p", String.valueOf(pid));
+        if (exitCode == 0) {
             response.setSuccess(true);
+        } else {
+            response.setMessage("renice exited with code " + exitCode);
         }
         return response;
     }
-    
+
     public ProcessInfo getProcess(int pid) {
-        return getProcess (pid, false);
+        return getProcess(pid, false);
     }
 
     public ProcessInfo getProcess(int pid, boolean fastMode) {
-        this.fastMode = fastMode;
+        validatePid(pid);
         List<Map<String, String>> processList
-                = parseList(ProcessesUtils.executeCommand("ps",
-                                "-o", PS_COLUMNS, "-p", String.valueOf(pid)));
+                = parseList(executeCommand("ps",
+                        "-o", PS_COLUMNS, "-p", String.valueOf(pid)));
 
-        if (processList != null && !processList.isEmpty()) {
-            Map<String, String> processData = processList.get(0);
-            ProcessInfo info = new ProcessInfo();
-            info.setPid(processData.get("pid"));
-            info.setName(processData.get("proc_name"));
-            info.setTime(processData.get("proc_time"));
-            info.setCommand(processData.get("command"));
-            info.setCpuUsage(processData.get("cpu_usage"));
-            info.setPhysicalMemory(processData.get("physical_memory"));
-            info.setStartTime(processData.get("start_time"));
-            info.setUser(processData.get("user"));
-            info.setVirtualMemory(processData.get("virtual_memory"));
-            info.setPriority(processData.get("priority"));
-
-            return info;
+        if (!processList.isEmpty()) {
+            return buildInfo(processList.get(0));
         }
         return null;
     }
 
-    private static void loadFullCommandData(List<Map<String, String>> processesDataList) {
+    private void loadFullCommandData(List<Map<String, String>> processesDataList) {
         Map<String, String> commandsMap = new HashMap<String, String>();
-        String data = ProcessesUtils.executeCommand("ps",
+        String data = executeCommand("ps",
                 "-e", "-o", PS_FULL_COMMAND);
+
+        if (data == null || data.isEmpty()) {
+            return;
+        }
+
         String[] dataStringLines = data.split("\\r?\\n");
 
         for (final String dataLine : dataStringLines) {
-            if (!(dataLine.trim().startsWith("PID"))) {
-                String[] elements = dataLine.trim().split("\\s+", PS_FULL_COMMAND_SIZE);
+            String line = dataLine.trim();
+            if (!line.isEmpty() && !line.startsWith("PID")) {
+                String[] elements = line.split("\\s+", PS_FULL_COMMAND_SIZE);
                 if (elements.length == PS_FULL_COMMAND_SIZE) {
                     commandsMap.put(elements[0], elements[1]);
                 }
@@ -180,20 +219,31 @@ class UnixProcessesService extends AbstractProcessesService {
         }
 
         for (final Map<String, String> process : processesDataList) {
-            if (commandsMap.containsKey(process.get("pid"))) {
-                process.put("command", commandsMap.get(process.get("pid")));
+            String pid = process.get("pid");
+            if (commandsMap.containsKey(pid)) {
+                process.put("command", commandsMap.get(pid));
             }
         }
     }
-    
-    
-    private void filterByName(List<Map<String, String>> processesDataList) {
-        List<Map<String, String>> processesToRemove = new ArrayList<Map<String, String>>();
-        for (final Map<String, String> process : processesDataList) {
-            if (!nameFilter.equals(process.get("proc_name"))) {
-                processesToRemove.add(process);
-            }
-        }
-        processesDataList.removeAll(processesToRemove);
-    }    
+
+    /**
+     * Executes a system command. Exposed as a protected method so that the
+     * parser can be tested without depending on the host operating system.
+     *
+     * @param command command and arguments
+     * @return command output
+     */
+    protected String executeCommand(String... command) {
+        return ProcessesUtils.executeCommand(command);
+    }
+
+    /**
+     * Executes a system command and returns its exit code.
+     *
+     * @param command command and arguments
+     * @return command exit code
+     */
+    protected int executeCommandAndGetCode(String... command) {
+        return ProcessesUtils.executeCommandAndGetCode(command);
+    }
 }

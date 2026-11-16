@@ -15,14 +15,13 @@
  */
 package org.jutils.jprocesses.info;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.jutils.jprocesses.util.ProcessesUtils;
 
 /**
  * Helper class of windows implementation to create and execute VBS scripts
@@ -33,71 +32,41 @@ class VBScriptHelper {
 
     private static final String CRLF = "\r\n";
 
+    private static final Logger LOGGER = Logger.getLogger(VBScriptHelper.class.getName());
+
     //Hide constructor
     private VBScriptHelper() {
     }
 
     private static String executeScript(String scriptCode) {
-        String scriptResponse = "";
         File tmpFile = null;
-        FileWriter writer = null;
-        BufferedReader processOutput = null;
-        BufferedReader errorOutput = null;
 
         try {
-            tmpFile = File.createTempFile("wmi4java" + new Date().getTime(), ".vbs");
-            writer = new FileWriter(tmpFile);
-            writer.write(scriptCode);
-            writer.flush();
-            writer.close();
-
-            Process process = Runtime.getRuntime().exec(
-                    new String[]{"cmd.exe", "/C", "cscript.exe", "/NoLogo", tmpFile.getAbsolutePath()});
-            processOutput
-                    = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = processOutput.readLine()) != null) {
-                if (!line.isEmpty()) {
-                    scriptResponse += line + CRLF;
-                }
-            }
-
-            if (scriptResponse.isEmpty()) {
-                errorOutput
-                        = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String errorResponse = "";
-                while ((line = errorOutput.readLine()) != null) {
-                    if (!line.isEmpty()) {
-                        errorResponse += line + CRLF;
-                    }
-                }
-                if (!errorResponse.isEmpty()) {
-                    Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, "WMI operation finished in error: ");
-                }
-                errorOutput.close();
-            }
-
-        } catch (Exception ex) {
-            Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
+            tmpFile = File.createTempFile("jprocesses", ".vbs");
+            FileWriter writer = new FileWriter(tmpFile);
             try {
-                if (processOutput != null) {
-                    processOutput.close();
-                }
-                if (errorOutput != null) {
-                    errorOutput.close();
-                }
-                if (writer != null) {
-                    writer.close();
-                }
-                if (tmpFile != null) {
-                    tmpFile.delete();
-                }
-            } catch (IOException ioe) {
-                Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ioe);
+                writer.write(scriptCode);
+            } finally {
+                writer.close();
+            }
+
+            //cscript writes errors to stderr; executeCommand merges both streams
+            String response = ProcessesUtils.executeCommand(
+                    "cmd.exe", "/C", "cscript.exe", "/NoLogo", tmpFile.getAbsolutePath());
+
+            if (response.isEmpty()) {
+                LOGGER.log(Level.WARNING, "WMI script finished without output");
+            }
+
+            return response.trim();
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "Error executing WMI script", ex);
+            return "jProcesses: error executing WMI script: " + ex;
+        } finally {
+            if (tmpFile != null && !tmpFile.delete()) {
+                tmpFile.deleteOnExit();
             }
         }
-        return scriptResponse.trim();
     }
 
     /**
@@ -122,7 +91,7 @@ class VBScriptHelper {
 
             return executeScript(scriptCode.toString());
         } catch (Exception ex) {
-            Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
 
         return null;
@@ -132,7 +101,8 @@ class VBScriptHelper {
      * Changes the priority of a process
      *
      * @param pid the PID
-     * @param newPriority the priority to set @see Windo
+     * @param newPriority the priority to set, see
+     * {@link org.jutils.jprocesses.model.WindowsPriority}
      * @return the output of the script
      */
     public static String changePriority(int pid, int newPriority) {
@@ -152,7 +122,7 @@ class VBScriptHelper {
 
             return executeScript(scriptCode.toString());
         } catch (Exception ex) {
-            Logger.getLogger(VBScriptHelper.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
 
         return null;

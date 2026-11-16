@@ -15,15 +15,19 @@
  */
 package org.jutils.jprocesses.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Model that encapsulates process information
  *
  * @author Javier Garcia Alonso
  */
-public class ProcessInfo {
+public class ProcessInfo implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String pid;
     private String time;
@@ -149,39 +153,31 @@ public class ProcessInfo {
     
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ProcessInfo that = (ProcessInfo) o;
 
-        if (pid != null ? !pid.equals(that.pid) : that.pid != null) return false;
-        if (time != null ? !time.equals(that.time) : that.time != null) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-//        if (user != null ? !user.equals(that.user) : that.user != null) return false;
-//        if (virtualMemory != null ? !virtualMemory.equals(that.virtualMemory) : that.virtualMemory != null)
-//            return false;
-//        if (physicalMemory != null ? !physicalMemory.equals(that.physicalMemory) : that.physicalMemory != null)
-//            return false;
-//        if (cpuUsage != null ? !cpuUsage.equals(that.cpuUsage) : that.cpuUsage != null) return false;
-        if (startTime != null ? !startTime.equals(that.startTime) : that.startTime != null) return false;
-        if (priority != null ? !priority.equals(that.priority) : that.priority != null) return false;
-        return command != null ? command.equals(that.command) : that.command == null;
-
+        return Objects.equals(pid, that.pid)
+                && Objects.equals(time, that.time)
+                && Objects.equals(name, that.name)
+                && Objects.equals(user, that.user)
+                && Objects.equals(virtualMemory, that.virtualMemory)
+                && Objects.equals(physicalMemory, that.physicalMemory)
+                && Objects.equals(cpuUsage, that.cpuUsage)
+                && Objects.equals(startTime, that.startTime)
+                && Objects.equals(priority, that.priority)
+                && Objects.equals(command, that.command);
     }
 
     @Override
     public int hashCode() {
-        int result = pid != null ? pid.hashCode() : 0;
-        result = 31 * result + (time != null ? time.hashCode() : 0);
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-//        result = 31 * result + (user != null ? user.hashCode() : 0)   //TODO: return this to equals and hashcode after getProcessesOwner refactoring
-//        result = 31 * result + (virtualMemory != null ? virtualMemory.hashCode() : 0);
-//        result = 31 * result + (physicalMemory != null ? physicalMemory.hashCode() : 0);
-//        result = 31 * result + (cpuUsage != null ? cpuUsage.hashCode() : 0);
-        result = 31 * result + (startTime != null ? startTime.hashCode() : 0);
-        result = 31 * result + (priority != null ? priority.hashCode() : 0);
-        result = 31 * result + (command != null ? command.hashCode() : 0);
-        return result;
+        return Objects.hash(pid, time, name, user, virtualMemory, physicalMemory,
+                cpuUsage, startTime, priority, command);
     }
 
     @Override
